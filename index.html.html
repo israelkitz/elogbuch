@@ -1,0 +1,949 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Case Log — Radiologia</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh}
+.topbar{background:#fff;border-bottom:1px solid #e5e5e5;padding:14px 24px;display:flex;align-items:center;position:sticky;top:0;z-index:10}
+.topbar-title{font-size:15px;font-weight:600}
+.topbar-sub{font-size:12px;color:#888;margin-top:1px}
+.container{max-width:960px;margin:0 auto;padding:24px 16px}
+.tabs{display:flex;gap:2px;border-bottom:1px solid #e5e5e5;margin-bottom:24px;flex-wrap:wrap}
+.tab{padding:9px 16px;font-size:13px;cursor:pointer;border-radius:6px 6px 0 0;color:#888;border:none;background:none;font-family:inherit}
+.tab:hover{color:#1a1a1a;background:#f5f5f3}
+.tab.active{color:#1a1a1a;font-weight:600;border-bottom:2px solid #1a1a1a;background:none}
+.section{display:none}.section.active{display:block}
+.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:16px 20px;margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+@media(max-width:600px){.grid2,.grid3,.grid4{grid-template-columns:1fr 1fr}}
+.field{display:flex;flex-direction:column;gap:4px}
+label{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+input,select,textarea{font-family:inherit;font-size:13px;width:100%;padding:8px 10px;border:1px solid #d5d5d5;border-radius:8px;background:#fff;color:#1a1a1a;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#1a1a1a}
+textarea{resize:vertical;min-height:64px}
+.sect-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#aaa;margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid #f0f0f0}
+.btn{font-family:inherit;padding:9px 18px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500}
+.btn-primary{background:#1a1a1a;color:#fff;border:none}
+.btn-outline{background:#fff;color:#1a1a1a;border:1px solid #d5d5d5}
+.btn-success{background:#1D9E75;color:#fff;border:none}
+.btn-warn{background:#BA7517;color:#fff;border:none}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;justify-content:flex-end;align-items:center}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:500px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
+.stat-card{background:#f5f5f3;border-radius:10px;padding:14px;text-align:center}
+.stat-num{font-size:24px;font-weight:700}
+.stat-lbl{font-size:11px;color:#888;margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
+.case-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:14px 16px;margin-bottom:8px}
+.case-card.editing{border-color:#378ADD;border-width:1.5px}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
+.b-blue{background:#E6F1FB;color:#0C447C}.b-teal{background:#E1F5EE;color:#085041}
+.b-amber{background:#FAEEDA;color:#633806}.b-coral{background:#FAECE7;color:#712B13}
+.b-green{background:#EAF3DE;color:#27500A}.b-gray{background:#f5f5f3;color:#666}
+.b-purple{background:#EEEDFE;color:#3C3489}
+.st-pre{background:#FAEEDA;color:#633806}.st-rev{background:#E1F5EE;color:#085041}
+.del-btn{background:none;border:none;cursor:pointer;color:#bbb;font-size:16px;padding:2px 6px;border-radius:4px}
+.del-btn:hover{color:#E24B4A}
+.edit-btn{background:none;border:1px solid #e5e5e5;cursor:pointer;color:#888;font-size:11px;padding:3px 10px;border-radius:6px;font-family:inherit}
+.edit-btn:hover{border-color:#1a1a1a;color:#1a1a1a}
+.diff-btn{background:none;border:1px solid #378ADD;cursor:pointer;color:#185FA5;font-size:11px;padding:3px 10px;border-radius:6px;font-family:inherit;font-weight:500}
+.diff-btn:hover{background:#E6F1FB}
+.filter-panel{background:#f5f5f3;border-radius:12px;padding:12px 14px;margin-bottom:16px}
+.filter-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
+.filter-grid2{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
+@media(max-width:600px){.filter-grid,.filter-grid2{grid-template-columns:1fr 1fr}}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-lbl{font-size:12px;color:#888;width:130px;flex-shrink:0;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;background:#f0f0f0;border-radius:4px;height:13px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px}
+.bar-cnt{font-size:12px;color:#888;width:28px;flex-shrink:0}
+.empty{text-align:center;padding:3rem 1rem;color:#bbb;font-size:14px}
+.tag-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.msg{font-size:12px;margin-top:8px}
+.msg-ok{color:#1D9E75}.msg-err{color:#E24B4A}.msg-info{color:#378ADD}
+.gs-status{font-size:13px;padding:10px 14px;border-radius:10px;margin-top:10px;line-height:1.6}
+.gs-ok{background:#E1F5EE;color:#085041}.gs-err{background:#FCEBEB;color:#791F1F}.gs-info{background:#E6F1FB;color:#0C447C}
+.stbtn{flex:1;padding:9px;border-radius:8px;border:1px solid #d5d5d5;font-size:13px;cursor:pointer;font-family:inherit;background:#fff;color:#888}
+.stbtn:hover{border-color:#888}
+.stbtn.sel-pre{background:#FAEEDA;color:#633806;border-color:#BA7517;font-weight:600}
+.stbtn.sel-rev{background:#E1F5EE;color:#085041;border-color:#1D9E75;font-weight:600}
+.preceptor-row{display:none;margin-top:10px}.preceptor-row.visible{display:block}
+.edit-form{border-top:1px solid #f0f0f0;margin-top:12px;padding-top:12px;display:none}
+.edit-form.open{display:block}
+.diff-panel{border-top:1px solid #f0f0f0;margin-top:12px;padding-top:12px;display:none}
+.diff-panel.open{display:block}
+.diff-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
+@media(max-width:580px){.diff-cols{grid-template-columns:1fr}}
+.diff-col{background:#fafafa;border:1px solid #e5e5e5;border-radius:8px;padding:12px;min-height:80px}
+.diff-col-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.diff-col-title.pre{color:#633806}.diff-col-title.rev{color:#085041}
+.diff-text{font-size:13px;line-height:1.85;white-space:pre-wrap;word-break:break-word}
+.diff-add{background:#d4edda;color:#155724;border-radius:3px;padding:0 2px}
+.diff-del{background:#f8d7da;color:#721c24;text-decoration:line-through;border-radius:3px;padding:0 2px}
+.diff-legend{display:flex;gap:14px;font-size:11px;color:#888;margin-top:10px;flex-wrap:wrap}
+.diff-legend span{display:flex;align-items:center;gap:5px}
+.leg-add{width:12px;height:12px;background:#d4edda;border-radius:3px;display:inline-block;flex-shrink:0}
+.leg-del{width:12px;height:12px;background:#f8d7da;border-radius:3px;display:inline-block;flex-shrink:0}
+.script-box{background:#f5f5f3;border-radius:8px;padding:12px;font-size:11px;font-family:'Courier New',monospace;color:#555;white-space:pre-wrap;line-height:1.7;overflow-x:auto;margin-top:8px}
+.highlight{background:#E1F5EE;border-radius:8px;padding:10px 14px;font-size:12px;color:#085041;line-height:1.7;margin-top:10px}
+.netlify-box{background:#E6F1FB;border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.netlify-box a{color:#0C447C;font-weight:600}
+.toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.action-row{display:flex;gap:6px;align-items:center;flex-shrink:0}
+#login-screen{position:fixed;inset:0;background:#f5f5f3;display:flex;align-items:center;justify-content:center;z-index:999}
+#login-screen.hidden{display:none}
+.login-box{background:#fff;border:1px solid #e5e5e5;border-radius:16px;padding:40px 36px;width:100%;max-width:360px;text-align:center}
+.login-logo{font-size:22px;font-weight:700;color:#1a1a1a;margin-bottom:4px}
+.login-sub{font-size:13px;color:#888;margin-bottom:28px}
+.login-box input[type=password]{font-size:15px;padding:11px 14px;border-radius:10px;border:1px solid #d5d5d5;width:100%;text-align:center;letter-spacing:.15em;outline:none;margin-bottom:12px}
+.login-box input[type=password]:focus{border-color:#1a1a1a}
+.login-box button{width:100%;padding:11px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+.login-box button:hover{opacity:.85}
+.login-err{font-size:12px;color:#A32D2D;margin-top:8px;min-height:16px}
+.login-hint{font-size:11px;color:#bbb;margin-top:16px;line-height:1.6}
+#app-wrapper{display:none}
+#app-wrapper.visible{display:block}
+</style>
+
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Case Log — Radiologia</div>
+    <div class="login-sub">Residência médica · Acesso restrito</div>
+    <input type="password" id="login-input" placeholder="••••••••" maxlength="32"
+      onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">Entrar</button>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-hint">Este sistema é de uso exclusivo dos residentes autorizados.<br>Primeiro acesso? Use a senha <strong>setup2024</strong> para configurar.</div>
+  </div>
+</div>
+
+<div id="app-wrapper">
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Case Log — Radiologia</div>
+    <div class="topbar-sub">Residência médica</div>
+  </div>
+</div>
+<div class="container">
+<div class="tabs">
+  <button class="tab active" onclick="showTab('registrar')">Registrar caso</button>
+  <button class="tab" onclick="showTab('casos')">Meus casos</button>
+  <button class="tab" onclick="showTab('painel')">Painel</button>
+  <button class="tab" onclick="showTab('config')">Configurar</button>
+</div>
+
+<!-- REGISTRAR -->
+<div id="tab-registrar" class="section active">
+<div class="card">
+  <div class="sect-title" style="margin-top:0">Identificação</div>
+  <div class="grid2" style="margin-bottom:12px">
+    <div class="field"><label>Nome completo</label><input id="f-nome" placeholder="Dr(a). Nome Sobrenome"></div>
+    <div class="field"><label>Ano de residência</label>
+      <select id="f-ano"><option value="">—</option><option>R1</option><option>R2</option><option>R3</option><option>R4</option></select>
+    </div>
+  </div>
+  <div class="sect-title">Dados do exame</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+    <div class="field"><label>Data do exame</label><input type="date" id="f-data-exame"></div>
+    <div class="field"><label>Data do laudo</label><input type="date" id="f-data-laudo"></div>
+    <div class="field"><label>Hospital / serviço</label><input id="f-local" placeholder="Ex: HC-UFPR"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+    <div class="field"><label>Nome do paciente</label><input id="f-paciente" placeholder="Opcional"></div>
+    <div class="field"><label>Registro do paciente</label><input id="f-regpaciente" placeholder="Nº de registro / prontuário"></div>
+  </div>
+  <div class="grid2" style="margin-bottom:12px">
+    <div class="field"><label>Modalidade</label>
+      <select id="f-modal"><option value="">Selecione...</option>
+        <option>Radiografia (RX)</option><option>Tomografia (TC)</option><option>Ressonância Magnética (RM)</option>
+        <option>Ultrassonografia (US)</option><option>Mamografia</option><option>Densitometria óssea (DXA)</option>
+        <option>Medicina Nuclear / PET-CT</option><option>Radiologia Intervencionista</option>
+        <option>Fluoroscopia</option><option>Angiotomografia</option><option>Outro</option>
+      </select>
+    </div>
+    <div class="field"><label>Área anatômica</label>
+      <select id="f-area"><option value="">Selecione...</option>
+        <option>Neurorradiologia</option><option>Cabeça e pescoço</option><option>Tórax</option>
+        <option>Cardiovascular</option><option>Abdome e pelve</option><option>Musculoesquelético</option>
+        <option>Mama</option><option>Intervencionista vascular</option><option>Intervencionista não vascular</option>
+        <option>Pediátrica</option><option>Ginecológica / obstétrica</option><option>Emergência / politrauma</option><option>Outro</option>
+      </select>
+    </div>
+  </div>
+  <div class="grid3" style="margin-bottom:12px">
+    <div class="field"><label>Nível de participação</label>
+      <select id="f-nivel"><option value="">Selecione...</option>
+        <option>Observador</option><option>Executante (supervisionado)</option>
+        <option>Executante (independente)</option><option>Supervisor / ensino</option>
+      </select>
+    </div>
+    <div class="field"><label>Tipo de caso</label>
+      <select id="f-tipo"><option value="">Selecione...</option>
+        <option>Eletivo / ambulatorial</option><option>Urgência / emergência</option>
+        <option>UTI / internação</option><option>Centro cirúrgico</option><option>Telelaudo remoto</option>
+      </select>
+    </div>
+    <div class="field"><label>Dificuldade</label>
+      <select id="f-dif"><option value="">Selecione...</option>
+        <option>Rotineiro</option><option>Moderado</option><option>Complexo</option><option>Raro / excepcional</option>
+      </select>
+    </div>
+  </div>
+  <div class="sect-title">Status do laudo</div>
+  <div class="field" style="margin-bottom:12px">
+    <label>Situação do laudo</label>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="stbtn" id="btn-pre" onclick="setStatus('pre-laudo','')">Pré-laudo liberado</button>
+      <button class="stbtn" id="btn-rev" onclick="setStatus('revisado','')">Revisado pelo preceptor</button>
+    </div>
+  </div>
+  <div class="preceptor-row" id="preceptor-row">
+    <div class="field" style="margin-bottom:12px"><label>Nome do preceptor revisor</label>
+      <input id="f-preceptor" placeholder="Dr(a). Nome do Preceptor">
+    </div>
+  </div>
+  <div class="sect-title">Textos dos laudos (para comparação)</div>
+  <div class="grid2" style="margin-bottom:12px">
+    <div class="field">
+      <label>Pré-laudo — seu texto</label>
+      <textarea id="f-prelaudo-txt" placeholder="Cole aqui o texto do seu pré-laudo..." style="min-height:110px"></textarea>
+    </div>
+    <div class="field">
+      <label>Laudo revisado — texto do preceptor</label>
+      <textarea id="f-laudorev-txt" placeholder="Cole aqui o laudo após revisão do preceptor..." style="min-height:110px"></textarea>
+    </div>
+  </div>
+  <div class="sect-title">Diagnóstico e notas</div>
+  <div class="field" style="margin-bottom:12px">
+    <label>Diagnóstico principal / achado relevante</label>
+    <input id="f-diag" placeholder="Ex: Tromboembolismo pulmonar bilateral...">
+  </div>
+  <div class="field" style="margin-bottom:4px">
+    <label>Notas / aprendizado (opcional)</label>
+    <textarea id="f-nota" placeholder="Aspectos técnicos, feedback do preceptor, pontos de aprendizado..."></textarea>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-outline" onclick="clearForm()">Limpar</button>
+    <button class="btn btn-primary" onclick="saveCase()">Salvar caso</button>
+  </div>
+  <div id="form-msg" class="msg" style="display:none"></div>
+</div>
+</div>
+
+<!-- CASOS -->
+<div id="tab-casos" class="section">
+  <div class="filter-panel">
+    <div class="filter-grid" style="margin-bottom:8px">
+      <div class="field"><label>Modalidade</label>
+        <select id="ff-modal" onchange="renderCases()"><option value="">Todas</option>
+          <option>Radiografia (RX)</option><option>Tomografia (TC)</option><option>Ressonância Magnética (RM)</option>
+          <option>Ultrassonografia (US)</option><option>Mamografia</option><option>Densitometria óssea (DXA)</option>
+          <option>Medicina Nuclear / PET-CT</option><option>Radiologia Intervencionista</option>
+          <option>Fluoroscopia</option><option>Angiotomografia</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="field"><label>Área anatômica</label>
+        <select id="ff-area" onchange="renderCases()"><option value="">Todas</option>
+          <option>Neurorradiologia</option><option>Cabeça e pescoço</option><option>Tórax</option>
+          <option>Cardiovascular</option><option>Abdome e pelve</option><option>Musculoesquelético</option>
+          <option>Mama</option><option>Intervencionista vascular</option><option>Intervencionista não vascular</option>
+          <option>Pediátrica</option><option>Ginecológica / obstétrica</option><option>Emergência / politrauma</option><option>Outro</option>
+        </select>
+      </div>
+      <div class="field"><label>Status do laudo</label>
+        <select id="ff-status" onchange="renderCases()"><option value="">Todos</option>
+          <option value="pre-laudo">Pré-laudo liberado</option>
+          <option value="revisado">Revisado pelo preceptor</option>
+        </select>
+      </div>
+    </div>
+    <div class="filter-grid2">
+      <div class="field"><label>Nome do paciente</label><input id="ff-paciente" placeholder="Buscar..." oninput="renderCases()"></div>
+      <div class="field"><label>Data do exame</label><input type="date" id="ff-data-exame" onchange="renderCases()"></div>
+      <div class="field"><label>Data do laudo</label><input type="date" id="ff-data-laudo" onchange="renderCases()"></div>
+      <div class="field"><label>Preceptor revisor</label><input id="ff-preceptor" placeholder="Nome..." oninput="renderCases()"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:8px">
+      <button class="btn btn-outline" style="font-size:12px;padding:5px 12px" onclick="clearFilters()">Limpar filtros</button>
+    </div>
+  </div>
+  <div class="toolbar">
+    <button class="btn btn-success" onclick="exportExcel()">Exportar Excel</button>
+    <button class="btn btn-outline" onclick="exportCSV()">Exportar CSV</button>
+    <label class="btn btn-outline" style="cursor:pointer">Importar CSV/Excel
+      <input type="file" id="import-file" accept=".csv,.xlsx,.xls" style="display:none" onchange="importFile(this)">
+    </label>
+    <button class="btn btn-warn" onclick="syncSheets()" id="btn-sync">Sincronizar Google Sheets</button>
+  </div>
+  <div id="sync-status" style="display:none" class="gs-status"></div>
+  <div id="cases-list"></div>
+</div>
+
+<!-- PAINEL -->
+<div id="tab-painel" class="section">
+  <div class="stat-grid" id="stat-cards"></div>
+  <div class="card"><div class="sect-title" style="margin-top:0">Status dos laudos</div><div id="bar-status"></div></div>
+  <div class="card"><div class="sect-title" style="margin-top:0">Casos por modalidade</div><div id="bar-modal"></div></div>
+  <div class="card"><div class="sect-title" style="margin-top:0">Casos por área anatômica</div><div id="bar-area"></div></div>
+  <div class="card"><div class="sect-title" style="margin-top:0">Revisões por preceptor</div><div id="bar-preceptor"></div></div>
+</div>
+
+<!-- CONFIG -->
+<div id="tab-config" class="section">
+  <div class="netlify-box">
+    <p style="font-size:13px;font-weight:600;color:#0C447C;margin-bottom:8px">Hospedar online com Netlify Drop — grátis e sem cadastro</p>
+    <ol style="font-size:12px;color:#185FA5;padding-left:1.2rem;line-height:2.1">
+      <li>Acesse <a href="https://app.netlify.com/drop" target="_blank">app.netlify.com/drop</a></li>
+      <li>Arraste e solte o arquivo <strong>case_log_radiologia.html</strong> na área indicada</li>
+      <li>Em segundos você recebe uma URL — ex: <strong>meu-caselog.netlify.app</strong></li>
+      <li>Abra essa URL em qualquer dispositivo: celular, tablet, outro computador</li>
+      <li>Crie uma conta gratuita para personalizar a URL e poder reupar versões atualizadas</li>
+    </ol>
+    <p style="font-size:11px;color:#378ADD;margin-top:8px">Cada navegador tem seu próprio armazenamento local. Use "Sincronizar Google Sheets" para centralizar os dados de todos os dispositivos.</p>
+  </div>
+
+  <div class="card">
+    <div class="sect-title" style="margin-top:0">Autenticação — Cloudflare Worker</div>
+    <p style="font-size:13px;color:#888;margin-bottom:10px">Cole aqui a URL do seu Worker para ativar a autenticação segura. Sem isso, qualquer pessoa que saiba da URL pode tentar acessar.</p>
+    <div class="field" style="margin-bottom:10px">
+      <label>URL do Worker</label>
+      <input id="cfg-workerurl" placeholder="https://caselog-auth.SEU-USUARIO.workers.dev">
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+      <button class="btn btn-primary" onclick="saveWorkerConfig()">Salvar URL</button>
+      <button class="btn btn-outline" onclick="testWorker()" id="btn-test-worker">Testar conexão</button>
+      <span id="worker-cfg-msg" class="msg" style="display:inline-block;margin-left:4px"></span>
+    </div>
+    <div id="worker-test-result" style="display:none" class="gs-status"></div>
+    <div style="background:#f5f5f3;border-radius:8px;padding:12px;font-size:12px;color:#888;line-height:1.7;margin-top:4px">
+      <strong style="color:#1a1a1a">Como funciona:</strong> a senha nunca fica no código HTML. Quando alguém tenta entrar, o app envia a senha digitada para o seu Worker no Cloudflare, que compara com a senha guardada lá e responde só "certo" ou "errado". Nem você consegue ver a senha olhando o código-fonte.
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sect-title" style="margin-top:0">Perfil padrão</div>
+    <div class="grid2" style="margin-bottom:12px">
+      <div class="field"><label>Nome padrão</label><input id="cfg-nome" placeholder="Dr(a). Nome"></div>
+      <div class="field"><label>Ano</label>
+        <select id="cfg-ano"><option value="">—</option><option>R1</option><option>R2</option><option>R3</option><option>R4</option></select>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="saveProfile()">Salvar perfil</button>
+    <span id="cfg-msg" class="msg" style="display:inline-block;margin-left:10px"></span>
+  </div>
+
+  <div class="card">
+    <div class="sect-title" style="margin-top:0">Sincronização Google Sheets</div>
+    <div class="highlight">Método JSONP — contorna o bloqueio de CORS. Use o script abaixo com <strong>Executar como: Eu</strong> e <strong>Acesso: Qualquer pessoa</strong>.</div>
+    <div style="margin-top:12px" class="field">
+      <label>URL do Apps Script Web App</label>
+      <input id="cfg-gsurl" placeholder="https://script.google.com/macros/s/.../exec">
+    </div>
+    <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+      <button class="btn btn-primary" onclick="saveGSConfig()">Salvar URL</button>
+      <span id="gs-cfg-msg" class="msg" style="display:inline-block"></span>
+    </div>
+    <div style="margin-top:14px;border-top:1px solid #f0f0f0;padding-top:14px">
+      <p style="font-size:12px;font-weight:600;margin-bottom:4px">Script do Apps Script</p>
+      <p style="font-size:12px;color:#888;margin-bottom:6px">Selecione tudo no editor, apague e cole este script. Depois crie uma nova implantação.</p>
+      <div class="script-box" id="script-box">function doGet(e) {
+  var callback = e.parameter.callback;
+  var data = e.parameter.data;
+  try {
+    var sheet = SpreadsheetApp
+      .getActiveSpreadsheet().getActiveSheet();
+    var parsed = JSON.parse(decodeURIComponent(data));
+    var headers = ["ID","Nome","Ano","Data Exame",
+      "Data Laudo","Hospital","Paciente","Modalidade",
+      "Área","Nível","Tipo","Dificuldade","Status Laudo",
+      "Preceptor","Diagnóstico","Notas",
+      "Pré-laudo texto","Laudo revisado texto"];
+    if (sheet.getLastRow() === 0)
+      sheet.appendRow(headers);
+    parsed.cases.forEach(function(c) {
+      var sl = c.statusLaudo === 'pre-laudo'
+        ? 'Pré-laudo liberado'
+        : c.statusLaudo === 'revisado'
+        ? 'Revisado pelo preceptor' : '';
+      sheet.appendRow([c.id,c.nome,c.anoRes,
+        c.dataExame,c.dataLaudo,c.local,c.paciente,
+        c.modal,c.area,c.nivel,c.tipo,c.dif,sl,
+        c.preceptor,c.diag,c.nota,
+        c.prelaudoTxt||'',c.laudoRevTxt||'']);
+    });
+    return ContentService.createTextOutput(
+      callback+'('+JSON.stringify(
+        {ok:true,count:parsed.cases.length})+')'
+    ).setMimeType(ContentService.MimeType.JAVASCRIPT);
+  } catch(err) {
+    return ContentService.createTextOutput(
+      callback+'('+JSON.stringify(
+        {ok:false,error:err.message})+')'
+    ).setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+}</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <button class="btn btn-outline" style="font-size:12px" onclick="copyScript()">Copiar script</button>
+        <span id="copy-msg" class="msg msg-ok" style="display:none">Copiado!</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="sect-title" style="margin-top:0">Dados locais</div>
+    <button class="btn btn-outline" style="color:#A32D2D;border-color:#A32D2D" onclick="if(confirm('Apagar todos os casos? Esta ação não pode ser desfeita.'))clearAll()">Limpar todos os casos</button>
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+const _sk='radio_auth_v2';
+const WORKER_KEY='radio_worker_url';
+
+async function doLogin(){
+  const val=document.getElementById('login-input').value.trim();
+  const err=document.getElementById('login-err');
+  const btn=document.querySelector('#login-screen button');
+  if(!val){err.textContent='Digite a senha.';return;}
+
+  const workerUrl=localStorage.getItem(WORKER_KEY)||'';
+
+  if(!workerUrl){
+    if(val==='setup2024'){
+      err.style.color='#BA7517';
+      err.textContent='Acesso de configuração ativo. Configure o Worker na aba Configurar.';
+      unlockApp();
+    } else {
+      err.style.color='#A32D2D';
+      err.textContent='Worker não configurado. Use a senha de configuração inicial: setup2024';
+    }
+    return;
+  }
+
+  btn.textContent='Verificando...';btn.disabled=true;
+  err.textContent='';
+
+  try{
+    const res=await fetch(workerUrl,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({senha:val})
+    });
+    const data=await res.json();
+    if(data.ok){
+      unlockApp();
+    } else {
+      err.style.color='#A32D2D';
+      err.textContent='Senha incorreta. Tente novamente.';
+      document.getElementById('login-input').value='';
+      document.getElementById('login-input').focus();
+    }
+  } catch(e){
+    err.style.color='#A32D2D';
+    err.textContent='Erro ao conectar. Verifique a URL do Worker na aba Configurar.';
+  }
+  btn.textContent='Entrar';btn.disabled=false;
+}
+
+function unlockApp(){
+  sessionStorage.setItem(_sk,'1');
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-wrapper').classList.add('visible');
+  initApp();
+}
+
+function checkAuth(){
+  if(sessionStorage.getItem(_sk)==='1'){
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('app-wrapper').classList.add('visible');
+    return true;
+  }
+  setTimeout(()=>document.getElementById('login-input').focus(),100);
+  return false;
+}
+
+const STORE='radio_caselog_v6';
+const PROF='radio_prof_v6';
+const GSKEY='radio_gsurl';
+let cases=JSON.parse(localStorage.getItem(STORE)||'[]');
+let newStatus='';
+
+const MCOL={'Radiografia (RX)':'b-blue','Tomografia (TC)':'b-teal','Ressonância Magnética (RM)':'b-amber',
+'Ultrassonografia (US)':'b-green','Mamografia':'b-coral','Medicina Nuclear / PET-CT':'b-blue',
+'Radiologia Intervencionista':'b-coral','Fluoroscopia':'b-amber','Angiotomografia':'b-teal'};
+const BCOL={'Radiografia (RX)':'#378ADD','Tomografia (TC)':'#1D9E75','Ressonância Magnética (RM)':'#BA7517',
+'Ultrassonografia (US)':'#639922','Mamografia':'#D85A30','Medicina Nuclear / PET-CT':'#534AB7',
+'Radiologia Intervencionista':'#D4537E','Fluoroscopia':'#EF9F27','Angiotomografia':'#5DCAA5','Outro':'#888',
+'Pré-laudo liberado':'#BA7517','Revisado':'#1D9E75'};
+
+function showTab(t){
+  ['registrar','casos','painel','config'].forEach((n,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',n===t);
+  });
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+  if(t==='casos')renderCases();
+  if(t==='painel')renderPanel();
+  if(t==='config')loadConfig();
+}
+
+function setStatus(s,prefix){
+  if(prefix==='')newStatus=s;
+  const pre=document.getElementById(prefix+'btn-pre');
+  const rev=document.getElementById(prefix+'btn-rev');
+  if(pre)pre.className='stbtn'+(s==='pre-laudo'?' sel-pre':'');
+  if(rev)rev.className='stbtn'+(s==='revisado'?' sel-rev':'');
+  const row=document.getElementById(prefix+'preceptor-row');
+  if(row)row.className='preceptor-row'+(s==='revisado'?' visible':'');
+  if(s!=='revisado'){const p=document.getElementById(prefix+'f-preceptor');if(p)p.value='';}
+}
+
+function persist(){localStorage.setItem(STORE,JSON.stringify(cases));}
+function flash(id,txt,cls){const e=document.getElementById(id);if(!e)return;e.textContent=txt;e.className='msg '+cls;e.style.display='inline-block';setTimeout(()=>e.style.display='none',2500);}
+function showMsg(id,txt,cls){const e=document.getElementById(id);if(!e)return;e.textContent=txt;e.className='msg '+cls;e.style.display='block';setTimeout(()=>e.style.display='none',3500);}
+
+function loadProfile(){
+  const p=JSON.parse(localStorage.getItem(PROF)||'{}');
+  if(p.nome)document.getElementById('f-nome').value=p.nome;
+  if(p.ano)document.getElementById('f-ano').value=p.ano;
+}
+function saveWorkerConfig(){
+  const url=document.getElementById('cfg-workerurl').value.trim();
+  localStorage.setItem(WORKER_KEY,url);
+  flash('worker-cfg-msg','URL salva.','msg-ok');
+}
+
+async function testWorker(){
+  const url=document.getElementById('cfg-workerurl').value.trim();
+  const res=document.getElementById('worker-test-result');
+  const btn=document.getElementById('btn-test-worker');
+  if(!url){res.textContent='Cole a URL do Worker antes de testar.';res.className='gs-status gs-err';res.style.display='block';return;}
+  btn.textContent='Testando...';btn.disabled=true;
+  res.style.display='none';
+  try{
+    const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({senha:'__teste_conexao__'})});
+    const d=await r.json();
+    if(d.ok===false||d.ok===true){
+      res.textContent='Conexão com o Worker funcionando corretamente.';
+      res.className='gs-status gs-ok';
+    } else {
+      res.textContent='Resposta inesperada do Worker. Verifique o código.';
+      res.className='gs-status gs-err';
+    }
+  }catch(e){
+    res.textContent='Não foi possível conectar ao Worker. Verifique a URL e se o Worker está publicado com acesso público.';
+    res.className='gs-status gs-err';
+  }
+  res.style.display='block';
+  btn.textContent='Testar conexão';btn.disabled=false;
+}
+
+function saveProfile(){
+  localStorage.setItem(PROF,JSON.stringify({nome:document.getElementById('cfg-nome').value,ano:document.getElementById('cfg-ano').value}));
+  flash('cfg-msg','Perfil salvo.','msg-ok');
+}
+function loadConfig(){
+  const p=JSON.parse(localStorage.getItem(PROF)||'{}');
+  if(p.nome)document.getElementById('cfg-nome').value=p.nome;
+  if(p.ano)document.getElementById('cfg-ano').value=p.ano;
+  document.getElementById('cfg-gsurl').value=localStorage.getItem(GSKEY)||'';
+  document.getElementById('cfg-workerurl').value=localStorage.getItem(WORKER_KEY)||'';
+}
+function saveGSConfig(){localStorage.setItem(GSKEY,document.getElementById('cfg-gsurl').value.trim());flash('gs-cfg-msg','URL salva.','msg-ok');}
+
+function saveCase(){
+  const dataExame=document.getElementById('f-data-exame').value;
+  const modal=document.getElementById('f-modal').value;
+  const area=document.getElementById('f-area').value;
+  const diag=document.getElementById('f-diag').value.trim();
+  const preceptor=document.getElementById('f-preceptor').value.trim();
+  if(!dataExame||!modal||!area||!diag){showMsg('form-msg','Preencha: data do exame, modalidade, área e diagnóstico.','msg-err');return;}
+  if(newStatus==='revisado'&&!preceptor){showMsg('form-msg','Informe o nome do preceptor revisor.','msg-err');return;}
+  cases.unshift({
+    id:Date.now(),
+    nome:document.getElementById('f-nome').value.trim(),
+    anoRes:document.getElementById('f-ano').value,
+    dataExame,dataLaudo:document.getElementById('f-data-laudo').value,
+    local:document.getElementById('f-local').value.trim(),
+    paciente:document.getElementById('f-paciente').value.trim(),
+    regpaciente:document.getElementById('f-regpaciente').value.trim(),
+    modal,area,
+    nivel:document.getElementById('f-nivel').value,
+    tipo:document.getElementById('f-tipo').value,
+    dif:document.getElementById('f-dif').value,
+    statusLaudo:newStatus,preceptor,diag,
+    nota:document.getElementById('f-nota').value.trim(),
+    prelaudoTxt:document.getElementById('f-prelaudo-txt').value.trim(),
+    laudoRevTxt:document.getElementById('f-laudorev-txt').value.trim()
+  });
+  persist();showMsg('form-msg','Caso registrado com sucesso.','msg-ok');
+  clearFormFields();loadProfile();
+}
+
+function clearFormFields(){
+  ['f-nome','f-ano','f-data-exame','f-data-laudo','f-local','f-paciente','f-regpaciente',
+   'f-modal','f-area','f-nivel','f-tipo','f-dif','f-diag','f-nota','f-preceptor',
+   'f-prelaudo-txt','f-laudorev-txt']
+  .forEach(id=>{const e=document.getElementById(id);if(e)e.tagName==='SELECT'?e.value='':e.value='';});
+  setStatus('','');newStatus='';
+}
+function clearForm(){clearFormFields();loadProfile();}
+function clearFilters(){
+  ['ff-modal','ff-area','ff-status','ff-paciente','ff-data-exame','ff-data-laudo','ff-preceptor']
+  .forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  renderCases();
+}
+function deleteCase(id){
+  if(!confirm('Remover este caso?'))return;
+  cases=cases.filter(c=>c.id!==id);persist();renderCases();
+}
+
+// ---- DIFF ENGINE (word-level LCS) ----
+function diffWords(a,b){
+  const wa=a.split(/(\s+)/),wb=b.split(/(\s+)/);
+  const m=wa.length,n=wb.length;
+  const dp=Array.from({length:m+1},()=>new Int32Array(n+1));
+  for(let i=1;i<=m;i++)for(let j=1;j<=n;j++)
+    dp[i][j]=wa[i-1]===wb[j-1]?dp[i-1][j-1]+1:Math.max(dp[i-1][j],dp[i][j-1]);
+  const opsA=[],opsB=[];
+  let i=m,j=n;
+  while(i>0||j>0){
+    if(i>0&&j>0&&wa[i-1]===wb[j-1]){opsA.unshift({t:'eq',s:wa[i-1]});opsB.unshift({t:'eq',s:wb[j-1]});i--;j--;}
+    else if(j>0&&(i===0||dp[i][j-1]>=dp[i-1][j])){opsB.unshift({t:'add',s:wb[j-1]});j--;}
+    else{opsA.unshift({t:'del',s:wa[i-1]});i--;}
+  }
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function render(ops,side){
+    return ops.map(o=>{
+      const s=esc(o.s);
+      if(o.t==='eq')return s;
+      if(side==='left'&&o.t==='del')return`<span class="diff-del">${s}</span>`;
+      if(side==='right'&&o.t==='add')return`<span class="diff-add">${s}</span>`;
+      return'';
+    }).join('');
+  }
+  return{left:render(opsA,'left'),right:render(opsB,'right')};
+}
+
+function toggleDiff(id){
+  const panel=document.getElementById('diff-'+id);
+  if(!panel)return;
+  const isOpen=panel.classList.contains('open');
+  document.querySelectorAll('.diff-panel.open').forEach(e=>e.classList.remove('open'));
+  document.querySelectorAll('.edit-form.open').forEach(e=>e.classList.remove('open'));
+  document.querySelectorAll('.case-card.editing').forEach(e=>e.classList.remove('editing'));
+  if(!isOpen){
+    panel.classList.add('open');
+    const c=cases.find(x=>x.id===id);
+    if(!c)return;
+    const pre=c.prelaudoTxt||'';
+    const rev=c.laudoRevTxt||'';
+    if(!pre&&!rev){panel.innerHTML='<p style="font-size:13px;color:#aaa;padding:6px 0">Nenhum texto de laudo registrado.</p>';return;}
+    const diff=diffWords(pre,rev);
+    panel.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+        <span style="font-size:12px;font-weight:600">Comparação de laudos</span>
+        <div class="diff-legend">
+          <span><i class="leg-del"></i>Removido no revisado</span>
+          <span><i class="leg-add"></i>Adicionado no revisado</span>
+        </div>
+      </div>
+      <div class="diff-cols">
+        <div class="diff-col">
+          <div class="diff-col-title pre">Pré-laudo — seu texto</div>
+          <div class="diff-text">${diff.left||'<span style="color:#bbb;font-style:italic">Sem texto</span>'}</div>
+        </div>
+        <div class="diff-col">
+          <div class="diff-col-title rev">Laudo revisado — preceptor</div>
+          <div class="diff-text">${diff.right||'<span style="color:#bbb;font-style:italic">Sem texto</span>'}</div>
+        </div>
+      </div>`;
+  }
+}
+
+function toggleEdit(id){
+  const el=document.getElementById('edit-'+id);
+  const card=document.getElementById('card-'+id);
+  if(!el)return;
+  const isOpen=el.classList.contains('open');
+  document.querySelectorAll('.edit-form.open').forEach(e=>e.classList.remove('open'));
+  document.querySelectorAll('.diff-panel.open').forEach(e=>e.classList.remove('open'));
+  document.querySelectorAll('.case-card.editing').forEach(e=>e.classList.remove('editing'));
+  if(!isOpen){el.classList.add('open');card.classList.add('editing');populateEditForm(id);}
+}
+
+function populateEditForm(id){
+  const c=cases.find(x=>x.id===id);if(!c)return;
+  const p='e'+id+'-';
+  const set=(s,v)=>{const e=document.getElementById(p+s);if(e)e.value=v||'';};
+  set('dataExame',c.dataExame);set('dataLaudo',c.dataLaudo);set('local',c.local);
+  set('paciente',c.paciente);set('regpaciente',c.regpaciente);set('modal',c.modal);set('area',c.area);
+  set('nivel',c.nivel);set('tipo',c.tipo);set('dif',c.dif);
+  set('diag',c.diag);set('nota',c.nota);set('f-preceptor',c.preceptor);
+  set('prelaudo',c.prelaudoTxt);set('laudorev',c.laudoRevTxt);
+  setStatus(c.statusLaudo||'',p);
+}
+
+function saveEdit(id){
+  const p='e'+id+'-';
+  const get=s=>{const e=document.getElementById(p+s);return e?e.value.trim():'';}
+  const getV=s=>{const e=document.getElementById(p+s);return e?e.value:'';}
+  const selPre=document.querySelector('#edit-'+id+' .stbtn.sel-pre');
+  const selRev=document.querySelector('#edit-'+id+' .stbtn.sel-rev');
+  const sl=selRev?'revisado':selPre?'pre-laudo':'';
+  const preceptor=get('f-preceptor');
+  if(sl==='revisado'&&!preceptor){alert('Informe o nome do preceptor revisor.');return;}
+  const idx=cases.findIndex(x=>x.id===id);if(idx<0)return;
+  cases[idx]={...cases[idx],
+    dataExame:getV('dataExame'),dataLaudo:getV('dataLaudo'),
+    local:get('local'),paciente:get('paciente'),regpaciente:get('regpaciente'),
+    modal:getV('modal'),area:getV('area'),nivel:getV('nivel'),
+    tipo:getV('tipo'),dif:getV('dif'),statusLaudo:sl,preceptor,
+    diag:get('diag'),nota:get('nota'),
+    prelaudoTxt:get('prelaudo'),laudoRevTxt:get('laudorev')
+  };
+  persist();renderCases();
+}
+
+function selOpts(sel,opts){return opts.map(o=>`<option${sel===o?' selected':''}>${o}</option>`).join('');}
+
+function renderCases(){
+  const fM=document.getElementById('ff-modal').value;
+  const fA=document.getElementById('ff-area').value;
+  const fS=document.getElementById('ff-status').value;
+  const fP=(document.getElementById('ff-paciente').value||'').toLowerCase();
+  const fDE=document.getElementById('ff-data-exame').value;
+  const fDL=document.getElementById('ff-data-laudo').value;
+  const fPR=(document.getElementById('ff-preceptor').value||'').toLowerCase();
+  const filtered=cases.filter(c=>{
+    if(fM&&c.modal!==fM)return false;
+    if(fA&&c.area!==fA)return false;
+    if(fS&&c.statusLaudo!==fS)return false;
+    if(fP&&!(c.paciente||'').toLowerCase().includes(fP))return false;
+    if(fDE&&c.dataExame!==fDE)return false;
+    if(fDL&&c.dataLaudo!==fDL)return false;
+    if(fPR&&!(c.preceptor||'').toLowerCase().includes(fPR))return false;
+    return true;
+  });
+  const el=document.getElementById('cases-list');
+  if(!filtered.length){el.innerHTML='<div class="empty">Nenhum caso encontrado.</div>';return;}
+  el.innerHTML=`<div style="font-size:12px;color:#888;margin-bottom:10px">${filtered.length} caso(s) encontrado(s)</div>`+
+  filtered.map(c=>{
+    const p='e'+c.id+'-';
+    const hasDiff=c.prelaudoTxt||c.laudoRevTxt;
+    const stB=c.statusLaudo==='pre-laudo'?'<span class="badge st-pre">Pré-laudo</span>':
+      c.statusLaudo==='revisado'?'<span class="badge st-rev">Revisado</span>':'';
+    return `<div class="case-card" id="card-${c.id}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:600">${c.diag||'—'}</div>
+          <div style="font-size:12px;color:#888;margin-top:3px;line-height:1.6">
+            ${c.dataExame||''}${c.dataLaudo?' → laudo: '+c.dataLaudo:''}${c.paciente?' · '+c.paciente:''}${c.regpaciente?' (reg. '+c.regpaciente+')':''}${c.local?' · '+c.local:''}${c.nome?' · '+c.nome:''}
+            ${c.statusLaudo==='revisado'&&c.preceptor?' · <strong style="color:#1a1a1a">'+c.preceptor+'</strong>':''}
+          </div>
+        </div>
+        <div class="action-row">
+          ${hasDiff?`<button class="diff-btn" onclick="toggleDiff(${c.id})">Ver diff</button>`:''}
+          <button class="edit-btn" onclick="toggleEdit(${c.id})">Editar</button>
+          <button class="del-btn" onclick="deleteCase(${c.id})" title="Remover">×</button>
+        </div>
+      </div>
+      <div class="tag-row">
+        ${stB}
+        <span class="badge ${MCOL[c.modal]||'b-blue'}">${c.modal||'—'}</span>
+        <span class="badge b-gray">${c.area||'—'}</span>
+        ${c.nivel?`<span class="badge b-gray">${c.nivel}</span>`:''}
+        ${c.anoRes?`<span class="badge b-purple">${c.anoRes}</span>`:''}
+        ${c.dif&&c.dif!=='Rotineiro'?`<span class="badge b-coral">${c.dif}</span>`:''}
+      </div>
+      ${c.nota?`<div style="font-size:12px;color:#888;margin-top:8px;border-top:1px solid #f0f0f0;padding-top:8px">${c.nota}</div>`:''}
+      <div class="diff-panel" id="diff-${c.id}"></div>
+      <div class="edit-form" id="edit-${c.id}">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:10px">
+          <div class="field"><label>Data exame</label><input type="date" id="${p}dataExame"></div>
+          <div class="field"><label>Data laudo</label><input type="date" id="${p}dataLaudo"></div>
+          <div class="field"><label>Hospital</label><input id="${p}local" placeholder="Hospital"></div>
+          <div class="field"><label>Paciente</label><input id="${p}paciente" placeholder="Nome"></div>
+          <div class="field"><label>Registro</label><input id="${p}regpaciente" placeholder="Nº prontuário"></div>
+        </div>
+        <div class="grid2" style="margin-bottom:10px">
+          <div class="field"><label>Modalidade</label>
+            <select id="${p}modal"><option value="">—</option>${selOpts(c.modal,['Radiografia (RX)','Tomografia (TC)','Ressonância Magnética (RM)','Ultrassonografia (US)','Mamografia','Densitometria óssea (DXA)','Medicina Nuclear / PET-CT','Radiologia Intervencionista','Fluoroscopia','Angiotomografia','Outro'])}</select>
+          </div>
+          <div class="field"><label>Área anatômica</label>
+            <select id="${p}area"><option value="">—</option>${selOpts(c.area,['Neurorradiologia','Cabeça e pescoço','Tórax','Cardiovascular','Abdome e pelve','Musculoesquelético','Mama','Intervencionista vascular','Intervencionista não vascular','Pediátrica','Ginecológica / obstétrica','Emergência / politrauma','Outro'])}</select>
+          </div>
+        </div>
+        <div class="grid3" style="margin-bottom:10px">
+          <div class="field"><label>Nível</label>
+            <select id="${p}nivel"><option value="">—</option>${selOpts(c.nivel,['Observador','Executante (supervisionado)','Executante (independente)','Supervisor / ensino'])}</select>
+          </div>
+          <div class="field"><label>Tipo</label>
+            <select id="${p}tipo"><option value="">—</option>${selOpts(c.tipo,['Eletivo / ambulatorial','Urgência / emergência','UTI / internação','Centro cirúrgico','Telelaudo remoto'])}</select>
+          </div>
+          <div class="field"><label>Dificuldade</label>
+            <select id="${p}dif"><option value="">—</option>${selOpts(c.dif,['Rotineiro','Moderado','Complexo','Raro / excepcional'])}</select>
+          </div>
+        </div>
+        <div class="field" style="margin-bottom:10px">
+          <label>Situação do laudo</label>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button class="stbtn" id="${p}btn-pre" onclick="setStatus('pre-laudo','${p}')">Pré-laudo liberado</button>
+            <button class="stbtn" id="${p}btn-rev" onclick="setStatus('revisado','${p}')">Revisado pelo preceptor</button>
+          </div>
+        </div>
+        <div class="preceptor-row" id="${p}preceptor-row" style="margin-bottom:10px">
+          <div class="field"><label>Preceptor revisor</label><input id="${p}f-preceptor" placeholder="Dr(a). Nome"></div>
+        </div>
+        <div class="grid2" style="margin-bottom:10px">
+          <div class="field"><label>Pré-laudo (texto)</label><textarea id="${p}prelaudo" style="min-height:80px" placeholder="Texto do pré-laudo"></textarea></div>
+          <div class="field"><label>Laudo revisado (texto)</label><textarea id="${p}laudorev" style="min-height:80px" placeholder="Texto após revisão"></textarea></div>
+        </div>
+        <div class="field" style="margin-bottom:10px"><label>Diagnóstico</label><input id="${p}diag" placeholder="Diagnóstico principal"></div>
+        <div class="field" style="margin-bottom:10px"><label>Notas</label><textarea id="${p}nota" placeholder="Notas e aprendizado"></textarea></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn btn-outline" style="font-size:12px" onclick="toggleEdit(${c.id})">Cancelar</button>
+          <button class="btn btn-primary" style="font-size:12px" onclick="saveEdit(${c.id})">Salvar alterações</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  filtered.forEach(c=>populateEditForm(c.id));
+}
+
+function renderPanel(){
+  const total=cases.length;
+  const rev=cases.filter(c=>c.statusLaudo==='revisado').length;
+  const pre=cases.filter(c=>c.statusLaudo==='pre-laudo').length;
+  const comp=cases.filter(c=>c.dif==='Complexo'||c.dif==='Raro / excepcional').length;
+  document.getElementById('stat-cards').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${total}</div><div class="stat-lbl">Total</div></div>
+    <div class="stat-card"><div class="stat-num">${rev}</div><div class="stat-lbl">Revisados</div></div>
+    <div class="stat-card"><div class="stat-num">${pre}</div><div class="stat-lbl">Pré-laudo</div></div>
+    <div class="stat-card"><div class="stat-num">${comp}</div><div class="stat-lbl">Complexos</div></div>`;
+  function bars(cnt,id){
+    const s=Object.entries(cnt).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+    const mx=s[0]?s[0][1]:1;
+    const el=document.getElementById(id);
+    if(!s.length){el.innerHTML='<div class="empty" style="padding:1rem">Sem dados ainda.</div>';return;}
+    el.innerHTML=s.map(([k,v])=>`<div class="bar-row">
+      <span class="bar-lbl" title="${k}">${k.length>18?k.slice(0,17)+'…':k}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/mx*100)}%;background:${BCOL[k]||'#888'}"></div></div>
+      <span class="bar-cnt">${v}</span></div>`).join('');
+  }
+  bars({'Pré-laudo liberado':pre,'Revisado':rev},'bar-status');
+  const mc={};cases.forEach(c=>{if(c.modal)mc[c.modal]=(mc[c.modal]||0)+1;});bars(mc,'bar-modal');
+  const ac={};cases.forEach(c=>{if(c.area)ac[c.area]=(ac[c.area]||0)+1;});bars(ac,'bar-area');
+  const pc={};cases.filter(c=>c.preceptor).forEach(c=>{pc[c.preceptor]=(pc[c.preceptor]||0)+1;});bars(pc,'bar-preceptor');
+}
+
+const HEADERS=["ID","Nome","Ano","Data Exame","Data Laudo","Hospital","Paciente","Registro Paciente",
+  "Modalidade","Área","Nível","Tipo","Dificuldade","Status Laudo","Preceptor","Diagnóstico","Notas","Pré-laudo texto","Laudo revisado texto"];
+function caseToRow(c){
+  const sl=c.statusLaudo==='pre-laudo'?'Pré-laudo liberado':c.statusLaudo==='revisado'?'Revisado pelo preceptor':'';
+  return[c.id,c.nome||'',c.anoRes||'',c.dataExame||'',c.dataLaudo||'',c.local||'',c.paciente||'',c.regpaciente||'',
+    c.modal||'',c.area||'',c.nivel||'',c.tipo||'',c.dif||'',sl,c.preceptor||'',c.diag||'',c.nota||'',
+    c.prelaudoTxt||'',c.laudoRevTxt||''];
+}
+function exportExcel(){
+  if(!cases.length){alert('Nenhum caso para exportar.');return;}
+  const ws=XLSX.utils.aoa_to_sheet([HEADERS,...cases.map(caseToRow)]);
+  ws['!cols']=[8,20,5,12,12,16,18,22,22,20,16,14,20,20,40,40,60,60].map(w=>({wch:w}));
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Case Log');
+  XLSX.writeFile(wb,`case_log_radiologia_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+function exportCSV(){
+  if(!cases.length){alert('Nenhum caso para exportar.');return;}
+  const csv=[HEADERS,...cases.map(caseToRow)].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download=`case_log_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+function importFile(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      let rows;
+      if(file.name.endsWith('.csv'))rows=e.target.result.split('\n').map(r=>r.split(',').map(v=>v.replace(/^"|"$/g,'').replace(/""/g,'"')));
+      else{const wb=XLSX.read(e.target.result,{type:'array'});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});}
+      const h=rows[0].map(v=>String(v).toLowerCase());
+      const ix=n=>h.findIndex(v=>v.includes(n));
+      let added=0;
+      rows.slice(1).forEach(r=>{
+        if(!r[ix('diagnós')])return;
+        const sl=String(r[ix('status')]||'');
+        cases.push({id:Date.now()+Math.random(),nome:r[ix('nome')]||'',anoRes:r[ix('ano')]||'',
+          dataExame:r[ix('exame')]||'',dataLaudo:r[ix('laudo')]||'',local:r[ix('hosp')]||'',paciente:r[ix('paciente')]||'',regpaciente:r[ix('registro')]||'',
+          modal:r[ix('modal')]||'',area:r[ix('área')]||r[ix('area')]||'',nivel:r[ix('nível')]||r[ix('nivel')]||'',
+          tipo:r[ix('tipo')]||'',dif:r[ix('dific')]||'',
+          statusLaudo:sl.includes('revisado')?'revisado':sl.includes('pré')||sl.includes('pre')?'pre-laudo':'',
+          preceptor:r[ix('preceptor')]||'',diag:r[ix('diagnós')]||'',nota:r[ix('nota')]||'',
+          prelaudoTxt:r[ix('pré-laudo')]||r[ix('pre-laudo')]||'',
+          laudoRevTxt:r[ix('laudo revisado')]||''});
+        added++;
+      });
+      persist();alert(added+' caso(s) importado(s) com sucesso.');renderCases();
+    }catch(err){alert('Erro ao importar: '+err.message);}
+  };
+  if(file.name.endsWith('.csv'))reader.readAsText(file,'UTF-8');else reader.readAsArrayBuffer(file);
+  input.value='';
+}
+
+function syncSheets(){
+  const url=localStorage.getItem(GSKEY)||'';
+  const st=document.getElementById('sync-status');
+  if(!url){st.textContent='Configure a URL na aba Configurar.';st.className='gs-status gs-err';st.style.display='block';return;}
+  if(!cases.length){st.textContent='Nenhum caso para sincronizar.';st.className='gs-status gs-info';st.style.display='block';return;}
+  const btn=document.getElementById('btn-sync');
+  btn.textContent='Enviando...';btn.disabled=true;
+  st.textContent='Conectando ao Google Sheets...';st.className='gs-status gs-info';st.style.display='block';
+  const cbName='gsCallback_'+Date.now();
+  const encoded=encodeURIComponent(JSON.stringify({cases}));
+  const scriptUrl=url+(url.includes('?')?'&':'?')+'callback='+cbName+'&data='+encoded;
+  const timeout=setTimeout(()=>{
+    cleanup();
+    st.textContent='Tempo esgotado. Verifique a URL e as configurações de implantação.';
+    st.className='gs-status gs-err';btn.textContent='Sincronizar Google Sheets';btn.disabled=false;
+  },15000);
+  function cleanup(){clearTimeout(timeout);delete window[cbName];const s=document.getElementById('jsonp-s');if(s)s.remove();}
+  window[cbName]=function(data){
+    cleanup();
+    if(data&&data.ok){st.textContent='Sincronizado! '+data.count+' caso(s) enviados ao Google Sheets.';st.className='gs-status gs-ok';}
+    else{st.textContent='Erro: '+(data&&data.error?data.error:'resposta inválida.');st.className='gs-status gs-err';}
+    btn.textContent='Sincronizar Google Sheets';btn.disabled=false;
+  };
+  const script=document.createElement('script');
+  script.id='jsonp-s';script.src=scriptUrl;
+  script.onerror=function(){
+    cleanup();st.textContent='Erro ao carregar o script. Verifique a URL e as configurações de implantação.';
+    st.className='gs-status gs-err';btn.textContent='Sincronizar Google Sheets';btn.disabled=false;
+  };
+  document.head.appendChild(script);
+}
+
+function copyScript(){
+  navigator.clipboard.writeText(document.getElementById('script-box').textContent)
+    .then(()=>{const m=document.getElementById('copy-msg');m.style.display='inline';setTimeout(()=>m.style.display='none',2000);});
+}
+function clearAll(){cases=[];persist();renderCases();renderPanel();}
+
+function initApp(){
+  document.getElementById('f-data-exame').value=new Date().toISOString().split('T')[0];
+  document.getElementById('f-data-laudo').value=new Date().toISOString().split('T')[0];
+  loadProfile();
+}
+
+checkAuth();
+</script>
+</body>
+</html>
