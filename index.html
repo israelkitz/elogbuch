@@ -167,7 +167,7 @@ textarea{resize:vertical;min-height:64px}
   </div>
   <div class="grid2" style="margin-bottom:12px">
     <div class="field"><label>Modalidade</label>
-      <select id="f-modal"><option value="">Selecione...</option>
+      <select id="f-modal" onchange="toggleDoppler()"><option value="">Selecione...</option>
         <option>Radiografia (RX)</option><option>Tomografia (TC)</option><option>Ressonância Magnética (RM)</option>
         <option>Ultrassonografia (US)</option><option>Mamografia</option><option>Densitometria óssea (DXA)</option>
         <option>PET-CT</option><option>Medicina Nuclear / Cintilografia</option>
@@ -180,9 +180,24 @@ textarea{resize:vertical;min-height:64px}
         <option>Neurorradiologia (crânio / SNC)</option><option>Seios da face (seios paranasais)</option>
         <option>Mastoide / ouvido / osso temporal</option><option>Pescoço (tireoide, laringe, partes moles cervicais)</option>
         <option>Coluna vertebral</option><option>Tórax</option><option>Cardiovascular</option>
-        <option>KIT (tórax + abdome + pelve)</option><option>Abdome</option><option>Pelve e trato urogenital</option>
-        <option>Musculoesquelético</option><option>Mama</option><option>Ginecológica / obstétrica</option>
-        <option>Pediátrica / neonatal</option><option>Outro</option>
+        <option>KIT (tórax + abdome + pelve)</option><option>Abdome</option><option>Abdome + Pelve</option>
+        <option>Pelve e trato urogenital</option><option>Musculoesquelético</option>
+        <option>Mama</option><option>Ginecológica / obstétrica</option>
+        <option>Pediátrica / neonatal</option><option>Transfontanela</option>
+        <option>Dermatológico</option><option>Outro</option>
+      </select>
+    </div>
+  </div>
+  <div id="doppler-row" style="display:none;margin-bottom:12px">
+    <div class="field">
+      <label>Doppler</label>
+      <select id="f-doppler">
+        <option value="">Sem Doppler</option>
+        <option>Doppler venoso</option>
+        <option>Doppler arterial</option>
+        <option>Doppler obstétrico</option>
+        <option>Doppler de órgãos</option>
+        <option>Outro Doppler</option>
       </select>
     </div>
   </div>
@@ -264,9 +279,11 @@ textarea{resize:vertical;min-height:64px}
           <option>Neurorradiologia (crânio / SNC)</option><option>Seios da face (seios paranasais)</option>
           <option>Mastoide / ouvido / osso temporal</option><option>Pescoço (tireoide, laringe, partes moles cervicais)</option>
           <option>Coluna vertebral</option><option>Tórax</option><option>Cardiovascular</option>
-          <option>KIT (tórax + abdome + pelve)</option><option>Abdome</option><option>Pelve e trato urogenital</option>
-          <option>Musculoesquelético</option><option>Mama</option><option>Ginecológica / obstétrica</option>
-          <option>Pediátrica / neonatal</option><option>Outro</option>
+          <option>KIT (tórax + abdome + pelve)</option><option>Abdome</option><option>Abdome + Pelve</option>
+          <option>Pelve e trato urogenital</option><option>Musculoesquelético</option>
+          <option>Mama</option><option>Ginecológica / obstétrica</option>
+          <option>Pediátrica / neonatal</option><option>Transfontanela</option>
+          <option>Dermatológico</option><option>Outro</option>
         </select>
       </div>
       <div class="field"><label>Status do laudo</label>
@@ -612,6 +629,17 @@ function loadConfig(){
 }
 function saveGSConfig(){localStorage.setItem(GSKEY,document.getElementById('cfg-gsurl').value.trim());flash('gs-cfg-msg','URL salva.','msg-ok');}
 
+function toggleDoppler(){
+  const modal=document.getElementById('f-modal').value;
+  const row=document.getElementById('doppler-row');
+  if(modal==='Ultrassonografia (US)'){
+    row.style.display='block';
+  } else {
+    row.style.display='none';
+    document.getElementById('f-doppler').value='';
+  }
+}
+
 function calcIdadeStr(dtNasc, dtExame){
   if(!dtNasc||!dtExame)return'';
   const nasc=new Date(dtNasc+'T00:00:00');
@@ -666,6 +694,7 @@ function saveCase(){
     dtnasc:document.getElementById('f-dtnasc').value,
     idade:document.getElementById('f-idade').value,
     modal,area,
+    doppler:document.getElementById('f-doppler').value,
     nivel:document.getElementById('f-nivel').value,
     tipo:document.getElementById('f-tipo').value,
     dif:document.getElementById('f-dif').value,
@@ -679,11 +708,12 @@ function saveCase(){
 }
 
 function clearFormFields(){
-  ['f-nome','f-ano','f-data-exame','f-data-laudo','f-local','f-paciente','f-regpaciente','f-dtnasc','f-idade',
+  ['f-nome','f-ano','f-data-exame','f-data-laudo','f-local','f-paciente','f-regpaciente','f-dtnasc','f-idade','f-doppler',
    'f-modal','f-area','f-nivel','f-tipo','f-dif','f-diag','f-nota','f-preceptor',
    'f-prelaudo-txt','f-laudorev-txt']
   .forEach(id=>{const e=document.getElementById(id);if(e)e.tagName==='SELECT'?e.value='':e.value='';});
   setStatus('','');newStatus='';
+  document.getElementById('doppler-row').style.display='none';
 }
 function clearForm(){clearFormFields();loadProfile();}
 function clearFilters(){
@@ -776,7 +806,7 @@ function populateEditForm(id){
   const set=(s,v)=>{const e=document.getElementById(p+s);if(e)e.value=v||'';};
   set('dataExame',c.dataExame);set('dataLaudo',c.dataLaudo);set('local',c.local);
   set('paciente',c.paciente);set('regpaciente',c.regpaciente);set('dtnasc',c.dtnasc);set('modal',c.modal);set('area',c.area);
-  setTimeout(()=>calcIdadeEdit(p),50);
+  setTimeout(()=>{calcIdadeEdit(p);const dp=document.getElementById(p+'doppler');if(dp)dp.value=c.doppler||'';},50);
   set('nivel',c.nivel);set('tipo',c.tipo);set('dif',c.dif);
   set('diag',c.diag);set('nota',c.nota);set('f-preceptor',c.preceptor);
   set('prelaudo',c.prelaudoTxt);set('laudorev',c.laudoRevTxt);
@@ -798,6 +828,7 @@ function saveEdit(id){
     local:get('local'),paciente:get('paciente'),regpaciente:get('regpaciente'),
     dtnasc:getV('dtnasc'),idade:calcIdadeStr(getV('dtnasc'),getV('dataExame')),
     modal:getV('modal'),area:getV('area'),nivel:getV('nivel'),
+    doppler:getV('doppler'),
     tipo:getV('tipo'),dif:getV('dif'),statusLaudo:sl,preceptor,
     diag:get('diag'),nota:get('nota'),
     prelaudoTxt:get('prelaudo'),laudoRevTxt:get('laudorev')
@@ -851,6 +882,7 @@ function renderCases(){
       <div class="tag-row">
         ${stB}
         <span class="badge ${MCOL[c.modal]||'b-blue'}">${c.modal||'—'}</span>
+        ${c.doppler?`<span class="badge b-teal">${c.doppler}</span>`:''}
         <span class="badge b-gray">${c.area||'—'}</span>
         ${c.nivel?`<span class="badge b-gray">${c.nivel}</span>`:''}
         ${c.anoRes?`<span class="badge b-purple">${c.anoRes}</span>`:''}
@@ -875,9 +907,10 @@ function renderCases(){
             <select id="${p}modal"><option value="">—</option>${selOpts(c.modal,['Radiografia (RX)','Tomografia (TC)','Ressonância Magnética (RM)','Ultrassonografia (US)','Mamografia','Densitometria óssea (DXA)','PET-CT','Medicina Nuclear / Cintilografia','Angiotomografia / AngioRM','Intervencionista vascular','Intervencionista não vascular','Fluoroscopia / Contrastado','Outro'])}</select>
           </div>
           <div class="field"><label>Área anatômica</label>
-            <select id="${p}area"><option value="">—</option>${selOpts(c.area,['Neurorradiologia (crânio / SNC)','Seios da face (seios paranasais)','Mastoide / ouvido / osso temporal','Pescoço (tireoide, laringe, partes moles cervicais)','Coluna vertebral','Tórax','Cardiovascular','KIT (tórax + abdome + pelve)','Abdome','Pelve e trato urogenital','Musculoesquelético','Mama','Ginecológica / obstétrica','Pediátrica / neonatal','Outro'])}</select>
+            <select id="${p}area"><option value="">—</option>${selOpts(c.area,['Neurorradiologia (crânio / SNC)','Seios da face (seios paranasais)','Mastoide / ouvido / osso temporal','Pescoço (tireoide, laringe, partes moles cervicais)','Coluna vertebral','Tórax','Cardiovascular','KIT (tórax + abdome + pelve)','Abdome','Abdome + Pelve','Pelve e trato urogenital','Musculoesquelético','Mama','Ginecológica / obstétrica','Pediátrica / neonatal','Transfontanela','Dermatológico','Outro'])}</select>
           </div>
         </div>
+        ${c.modal==='Ultrassonografia (US)'?`<div style="margin-bottom:10px"><div class="field"><label>Doppler</label><select id="${p}doppler"><option value="">Sem Doppler</option><option>Doppler venoso</option><option>Doppler arterial</option><option>Doppler obstétrico</option><option>Doppler de órgãos</option><option>Outro Doppler</option></select></div></div>`:'<input type="hidden" id="${p}doppler" value="">'}
         <div class="grid3" style="margin-bottom:10px">
           <div class="field"><label>Nível</label>
             <select id="${p}nivel"><option value="">—</option>${selOpts(c.nivel,['Observador','Executante (supervisionado)','Executante (independente)','Supervisor / ensino'])}</select>
@@ -942,12 +975,12 @@ function renderPanel(){
 }
 
 const HEADERS=["ID","Nome","Ano","Data Exame","Data Laudo","Hospital","Paciente","Registro Paciente",
-  "Data Nascimento","Idade no Exame","Modalidade","Área","Nível","Tipo","Dificuldade","Status Laudo",
+  "Data Nascimento","Idade no Exame","Modalidade","Doppler","Área","Nível","Tipo","Dificuldade","Status Laudo",
   "Preceptor","Diagnóstico","Notas","Pré-laudo texto","Laudo revisado texto"];
 function caseToRow(c){
   const sl=c.statusLaudo==='pre-laudo'?'Pré-laudo liberado':c.statusLaudo==='revisado'?'Revisado pelo preceptor':'';
   return[c.id,c.nome||'',c.anoRes||'',c.dataExame||'',c.dataLaudo||'',c.local||'',c.paciente||'',c.regpaciente||'',
-    c.dtnasc||'',c.idade||'',c.modal||'',c.area||'',c.nivel||'',c.tipo||'',c.dif||'',sl,
+    c.dtnasc||'',c.idade||'',c.modal||'',c.doppler||'',c.area||'',c.nivel||'',c.tipo||'',c.dif||'',sl,
     c.preceptor||'',c.diag||'',c.nota||'',c.prelaudoTxt||'',c.laudoRevTxt||''];
 }
 function exportExcel(){
