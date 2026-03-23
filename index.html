@@ -368,37 +368,77 @@ textarea{resize:vertical;min-height:64px}
       <p style="font-size:12px;color:#888;margin-bottom:6px">Selecione tudo no editor, apague e cole este script. Depois crie uma nova implantação.</p>
       <div class="script-box" id="script-box">function doGet(e) {
   var callback = e.parameter.callback;
+  var action = e.parameter.action;
   var data = e.parameter.data;
   try {
     var sheet = SpreadsheetApp
       .getActiveSpreadsheet().getActiveSheet();
+
+    if (action === 'read') {
+      var lastRow = sheet.getLastRow();
+      if (lastRow < 2) {
+        return ContentService.createTextOutput(
+          callback+'('+JSON.stringify({ok:true,cases:[]})+')' 
+        ).setMimeType(ContentService.MimeType.JAVASCRIPT);
+      }
+      var rows = sheet.getRange(2,1,lastRow-1,21).getValues();
+      var cases = rows.filter(function(r){return r[0];}).map(function(r){
+        return {
+          id:r[0],nome:r[1],anoRes:r[2],
+          dataExame:r[3]?Utilities.formatDate(new Date(r[3]),'UTC','yyyy-MM-dd'):'',
+          dataLaudo:r[4]?Utilities.formatDate(new Date(r[4]),'UTC','yyyy-MM-dd'):'',
+          local:r[5],paciente:r[6],regpaciente:r[7],
+          dtnasc:r[8]?Utilities.formatDate(new Date(r[8]),'UTC','yyyy-MM-dd'):'',
+          idade:r[9],modal:r[10],area:r[11],
+          nivel:r[12],tipo:r[13],dif:r[14],
+          statusLaudo:r[15]==='Pré-laudo liberado'?'pre-laudo'
+            :r[15]==='Revisado pelo preceptor'?'revisado':'',
+          preceptor:r[16],diag:r[17],nota:r[18],
+          prelaudoTxt:r[19],laudoRevTxt:r[20]
+        };
+      });
+      return ContentService.createTextOutput(
+        callback+'('+JSON.stringify({ok:true,cases:cases})+')'
+      ).setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+
+    var headers = ["ID","Nome","Ano","Data Exame","Data Laudo",
+      "Hospital","Paciente","Registro Paciente","Data Nascimento",
+      "Idade no Exame","Modalidade","Área","Nível","Tipo",
+      "Dificuldade","Status Laudo","Preceptor","Diagnóstico",
+      "Notas","Pré-laudo texto","Laudo revisado texto"];
+
+    if (sheet.getLastRow() === 0) sheet.appendRow(headers);
+
+    var lastRow = sheet.getLastRow();
+    var existingIds = [];
+    if (lastRow > 1) {
+      var idCol = sheet.getRange(2,1,lastRow-1,1).getValues();
+      existingIds = idCol.map(function(r){return String(r[0]);});
+    }
+
+    var added = 0;
     var parsed = JSON.parse(decodeURIComponent(data));
-    var headers = ["ID","Nome","Ano","Data Exame",
-      "Data Laudo","Hospital","Paciente","Modalidade",
-      "Área","Nível","Tipo","Dificuldade","Status Laudo",
-      "Preceptor","Diagnóstico","Notas",
-      "Pré-laudo texto","Laudo revisado texto"];
-    if (sheet.getLastRow() === 0)
-      sheet.appendRow(headers);
     parsed.cases.forEach(function(c) {
-      var sl = c.statusLaudo === 'pre-laudo'
-        ? 'Pré-laudo liberado'
-        : c.statusLaudo === 'revisado'
-        ? 'Revisado pelo preceptor' : '';
+      if (existingIds.indexOf(String(c.id)) !== -1) return;
+      var sl = c.statusLaudo === 'pre-laudo' ? 'Pré-laudo liberado'
+             : c.statusLaudo === 'revisado' ? 'Revisado pelo preceptor' : '';
       sheet.appendRow([c.id,c.nome,c.anoRes,
         c.dataExame,c.dataLaudo,c.local,c.paciente,
+        c.regpaciente||'',c.dtnasc||'',c.idade||'',
         c.modal,c.area,c.nivel,c.tipo,c.dif,sl,
         c.preceptor,c.diag,c.nota,
         c.prelaudoTxt||'',c.laudoRevTxt||'']);
+      added++;
     });
+
     return ContentService.createTextOutput(
-      callback+'('+JSON.stringify(
-        {ok:true,count:parsed.cases.length})+')'
+      callback+'('+JSON.stringify({ok:true,count:added})+')'
     ).setMimeType(ContentService.MimeType.JAVASCRIPT);
+
   } catch(err) {
     return ContentService.createTextOutput(
-      callback+'('+JSON.stringify(
-        {ok:false,error:err.message})+')'
+      callback+'('+JSON.stringify({ok:false,error:err.message})+')'
     ).setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
 }</div>
