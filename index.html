@@ -299,6 +299,12 @@ textarea{resize:vertical;min-height:64px}
       <div class="field"><label>Data do laudo</label><input type="date" id="ff-data-laudo" onchange="renderCases()"></div>
       <div class="field"><label>Preceptor revisor</label><input id="ff-preceptor" placeholder="Nome..." oninput="renderCases()"></div>
     </div>
+    <div style="margin-top:8px">
+      <div class="field">
+        <label>Buscar no texto dos laudos</label>
+        <input id="ff-laudo" placeholder="Palavra ou trecho — busca no pré-laudo e laudo revisado..." oninput="renderCases()" style="background:#fff">
+      </div>
+    </div>
     <div style="display:flex;justify-content:flex-end;margin-top:8px">
       <button class="btn btn-outline" style="font-size:12px;padding:5px 12px" onclick="clearFilters()">Limpar filtros</button>
     </div>
@@ -717,7 +723,7 @@ function clearFormFields(){
 }
 function clearForm(){clearFormFields();loadProfile();}
 function clearFilters(){
-  ['ff-modal','ff-area','ff-status','ff-paciente','ff-data-exame','ff-data-laudo','ff-preceptor']
+  ['ff-modal','ff-area','ff-status','ff-paciente','ff-data-exame','ff-data-laudo','ff-preceptor','ff-laudo']
   .forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   renderCases();
 }
@@ -838,6 +844,12 @@ function saveEdit(id){
 
 function selOpts(sel,opts){return opts.map(o=>`<option${sel===o?' selected':''}>${o}</option>`).join('');}
 
+function highlight(text, term){
+  if(!term||!text)return text||'';
+  const esc=term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  return text.replace(new RegExp('('+esc+')','gi'),'<mark style="background:#fff3cd;color:#7d4e00;border-radius:2px;padding:0 1px">$1</mark>');
+}
+
 function renderCases(){
   const fM=document.getElementById('ff-modal').value;
   const fA=document.getElementById('ff-area').value;
@@ -846,6 +858,7 @@ function renderCases(){
   const fDE=document.getElementById('ff-data-exame').value;
   const fDL=document.getElementById('ff-data-laudo').value;
   const fPR=(document.getElementById('ff-preceptor').value||'').toLowerCase();
+  const fLaudo=(document.getElementById('ff-laudo').value||'').toLowerCase();
   const filtered=cases.filter(c=>{
     if(fM&&c.modal!==fM)return false;
     if(fA&&c.area!==fA)return false;
@@ -854,6 +867,10 @@ function renderCases(){
     if(fDE&&c.dataExame!==fDE)return false;
     if(fDL&&c.dataLaudo!==fDL)return false;
     if(fPR&&!(c.preceptor||'').toLowerCase().includes(fPR))return false;
+    if(fLaudo){
+      const haystack=((c.prelaudoTxt||'')+(c.laudoRevTxt||'')+(c.diag||'')+(c.nota||'')).toLowerCase();
+      if(!haystack.includes(fLaudo))return false;
+    }
     return true;
   });
   const el=document.getElementById('cases-list');
@@ -864,10 +881,13 @@ function renderCases(){
     const hasDiff=c.prelaudoTxt||c.laudoRevTxt;
     const stB=c.statusLaudo==='pre-laudo'?'<span class="badge st-pre">Pré-laudo</span>':
       c.statusLaudo==='revisado'?'<span class="badge st-rev">Revisado</span>':'';
+    const laudoMatch=fLaudo&&hasDiff;
+    const preHL=laudoMatch?highlight(c.prelaudoTxt,fLaudo):'';
+    const revHL=laudoMatch?highlight(c.laudoRevTxt,fLaudo):'';
     return `<div class="case-card" id="card-${c.id}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:600">${c.diag||'—'}</div>
+          <div style="font-size:14px;font-weight:600">${highlight(c.diag||'—',fLaudo)}</div>
           <div style="font-size:12px;color:#888;margin-top:3px;line-height:1.6">
             ${c.dataExame||''}${c.dataLaudo?' → laudo: '+c.dataLaudo:''}${c.paciente?' · '+c.paciente:''}${c.regpaciente?' (reg. '+c.regpaciente+')':''}${c.idade?' · '+c.idade:''}${c.local?' · '+c.local:''}${c.nome?' · '+c.nome:''}
             ${c.statusLaudo==='revisado'&&c.preceptor?' · <strong style="color:#1a1a1a">'+c.preceptor+'</strong>':''}
@@ -888,7 +908,11 @@ function renderCases(){
         ${c.anoRes?`<span class="badge b-purple">${c.anoRes}</span>`:''}
         ${c.dif&&c.dif!=='Rotineiro'?`<span class="badge b-coral">${c.dif}</span>`:''}
       </div>
-      ${c.nota?`<div style="font-size:12px;color:#888;margin-top:8px;border-top:1px solid #f0f0f0;padding-top:8px">${c.nota}</div>`:''}
+      ${c.nota?`<div style="font-size:12px;color:#888;margin-top:8px;border-top:1px solid #f0f0f0;padding-top:8px">${highlight(c.nota,fLaudo)}</div>`:''}
+      ${laudoMatch&&(preHL||revHL)?`<div style="margin-top:8px;border-top:1px solid #f0f0f0;padding-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        ${preHL?`<div><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#633806;margin-bottom:4px">Pré-laudo</div><div style="font-size:12px;color:#555;line-height:1.7;white-space:pre-wrap;max-height:80px;overflow:hidden">${preHL}</div></div>`:''}
+        ${revHL?`<div><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#085041;margin-bottom:4px">Laudo revisado</div><div style="font-size:12px;color:#555;line-height:1.7;white-space:pre-wrap;max-height:80px;overflow:hidden">${revHL}</div></div>`:''}
+      </div>`:''}
       <div class="diff-panel" id="diff-${c.id}"></div>
       <div class="edit-form" id="edit-${c.id}">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px;margin-bottom:10px">
@@ -1031,8 +1055,7 @@ function importFile(input){
 function syncSend(){
   const url=localStorage.getItem(GSKEY)||GS_DEFAULT;
   const st=document.getElementById('sync-status');
-  if(!cases.length){st.textContent='Nenhum caso para enviar.';st.className='gs-status gs-info';st.style.display='block';return;}
-  const btn=document.getElementById('btn-sync-send');
+  if(!cases.length){st.textContent='Nenhum caso para enviar.';st.className='gs-status gs-info';st.style.display='block';return;}  const btn=document.getElementById('btn-sync-send');
   btn.textContent='Enviando...';btn.disabled=true;
   st.textContent='Enviando casos para o Google Sheets...';st.className='gs-status gs-info';st.style.display='block';
   const cbName='gsCallback_'+Date.now();
