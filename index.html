@@ -170,16 +170,19 @@ textarea{resize:vertical;min-height:64px}
       <select id="f-modal"><option value="">Selecione...</option>
         <option>Radiografia (RX)</option><option>Tomografia (TC)</option><option>Ressonância Magnética (RM)</option>
         <option>Ultrassonografia (US)</option><option>Mamografia</option><option>Densitometria óssea (DXA)</option>
-        <option>Medicina Nuclear / PET-CT</option><option>Radiologia Intervencionista</option>
-        <option>Fluoroscopia</option><option>Angiotomografia</option><option>Outro</option>
+        <option>PET-CT</option><option>Medicina Nuclear / Cintilografia</option>
+        <option>Angiotomografia / AngioRM</option><option>Intervencionista vascular</option>
+        <option>Intervencionista não vascular</option><option>Fluoroscopia / Contrastado</option><option>Outro</option>
       </select>
     </div>
     <div class="field"><label>Área anatômica</label>
       <select id="f-area"><option value="">Selecione...</option>
-        <option>Neurorradiologia</option><option>Cabeça e pescoço</option><option>Tórax</option>
-        <option>Cardiovascular</option><option>Abdome e pelve</option><option>Musculoesquelético</option>
-        <option>Mama</option><option>Intervencionista vascular</option><option>Intervencionista não vascular</option>
-        <option>Pediátrica</option><option>Ginecológica / obstétrica</option><option>Emergência / politrauma</option><option>Outro</option>
+        <option>Neurorradiologia (crânio / SNC)</option><option>Seios da face (seios paranasais)</option>
+        <option>Mastoide / ouvido / osso temporal</option><option>Pescoço (tireoide, laringe, partes moles cervicais)</option>
+        <option>Coluna vertebral</option><option>Tórax</option><option>Cardiovascular</option>
+        <option>KIT (tórax + abdome + pelve)</option><option>Abdome</option><option>Pelve e trato urogenital</option>
+        <option>Musculoesquelético</option><option>Mama</option><option>Ginecológica / obstétrica</option>
+        <option>Pediátrica / neonatal</option><option>Outro</option>
       </select>
     </div>
   </div>
@@ -251,16 +254,19 @@ textarea{resize:vertical;min-height:64px}
         <select id="ff-modal" onchange="renderCases()"><option value="">Todas</option>
           <option>Radiografia (RX)</option><option>Tomografia (TC)</option><option>Ressonância Magnética (RM)</option>
           <option>Ultrassonografia (US)</option><option>Mamografia</option><option>Densitometria óssea (DXA)</option>
-          <option>Medicina Nuclear / PET-CT</option><option>Radiologia Intervencionista</option>
-          <option>Fluoroscopia</option><option>Angiotomografia</option><option>Outro</option>
+          <option>PET-CT</option><option>Medicina Nuclear / Cintilografia</option>
+          <option>Angiotomografia / AngioRM</option><option>Intervencionista vascular</option>
+          <option>Intervencionista não vascular</option><option>Fluoroscopia / Contrastado</option><option>Outro</option>
         </select>
       </div>
       <div class="field"><label>Área anatômica</label>
         <select id="ff-area" onchange="renderCases()"><option value="">Todas</option>
-          <option>Neurorradiologia</option><option>Cabeça e pescoço</option><option>Tórax</option>
-          <option>Cardiovascular</option><option>Abdome e pelve</option><option>Musculoesquelético</option>
-          <option>Mama</option><option>Intervencionista vascular</option><option>Intervencionista não vascular</option>
-          <option>Pediátrica</option><option>Ginecológica / obstétrica</option><option>Emergência / politrauma</option><option>Outro</option>
+          <option>Neurorradiologia (crânio / SNC)</option><option>Seios da face (seios paranasais)</option>
+          <option>Mastoide / ouvido / osso temporal</option><option>Pescoço (tireoide, laringe, partes moles cervicais)</option>
+          <option>Coluna vertebral</option><option>Tórax</option><option>Cardiovascular</option>
+          <option>KIT (tórax + abdome + pelve)</option><option>Abdome</option><option>Pelve e trato urogenital</option>
+          <option>Musculoesquelético</option><option>Mama</option><option>Ginecológica / obstétrica</option>
+          <option>Pediátrica / neonatal</option><option>Outro</option>
         </select>
       </div>
       <div class="field"><label>Status do laudo</label>
@@ -479,11 +485,15 @@ let cases=JSON.parse(localStorage.getItem(STORE)||'[]');
 let newStatus='';
 
 const MCOL={'Radiografia (RX)':'b-blue','Tomografia (TC)':'b-teal','Ressonância Magnética (RM)':'b-amber',
-'Ultrassonografia (US)':'b-green','Mamografia':'b-coral','Medicina Nuclear / PET-CT':'b-blue',
-'Radiologia Intervencionista':'b-coral','Fluoroscopia':'b-amber','Angiotomografia':'b-teal'};
+'Ultrassonografia (US)':'b-green','Mamografia':'b-coral','PET-CT':'b-purple',
+'Medicina Nuclear / Cintilografia':'b-purple','Angiotomografia / AngioRM':'b-teal',
+'Intervencionista vascular':'b-coral','Intervencionista não vascular':'b-coral',
+'Fluoroscopia / Contrastado':'b-amber'};
 const BCOL={'Radiografia (RX)':'#378ADD','Tomografia (TC)':'#1D9E75','Ressonância Magnética (RM)':'#BA7517',
-'Ultrassonografia (US)':'#639922','Mamografia':'#D85A30','Medicina Nuclear / PET-CT':'#534AB7',
-'Radiologia Intervencionista':'#D4537E','Fluoroscopia':'#EF9F27','Angiotomografia':'#5DCAA5','Outro':'#888',
+'Ultrassonografia (US)':'#639922','Mamografia':'#D85A30','PET-CT':'#534AB7',
+'Medicina Nuclear / Cintilografia':'#7F77DD','Angiotomografia / AngioRM':'#5DCAA5',
+'Intervencionista vascular':'#D4537E','Intervencionista não vascular':'#D85A30',
+'Fluoroscopia / Contrastado':'#EF9F27','Outro':'#888',
 'Pré-laudo liberado':'#BA7517','Revisado':'#1D9E75'};
 
 function showTab(t){
@@ -821,10 +831,10 @@ function renderCases(){
         </div>
         <div class="grid2" style="margin-bottom:10px">
           <div class="field"><label>Modalidade</label>
-            <select id="${p}modal"><option value="">—</option>${selOpts(c.modal,['Radiografia (RX)','Tomografia (TC)','Ressonância Magnética (RM)','Ultrassonografia (US)','Mamografia','Densitometria óssea (DXA)','Medicina Nuclear / PET-CT','Radiologia Intervencionista','Fluoroscopia','Angiotomografia','Outro'])}</select>
+            <select id="${p}modal"><option value="">—</option>${selOpts(c.modal,['Radiografia (RX)','Tomografia (TC)','Ressonância Magnética (RM)','Ultrassonografia (US)','Mamografia','Densitometria óssea (DXA)','PET-CT','Medicina Nuclear / Cintilografia','Angiotomografia / AngioRM','Intervencionista vascular','Intervencionista não vascular','Fluoroscopia / Contrastado','Outro'])}</select>
           </div>
           <div class="field"><label>Área anatômica</label>
-            <select id="${p}area"><option value="">—</option>${selOpts(c.area,['Neurorradiologia','Cabeça e pescoço','Tórax','Cardiovascular','Abdome e pelve','Musculoesquelético','Mama','Intervencionista vascular','Intervencionista não vascular','Pediátrica','Ginecológica / obstétrica','Emergência / politrauma','Outro'])}</select>
+            <select id="${p}area"><option value="">—</option>${selOpts(c.area,['Neurorradiologia (crânio / SNC)','Seios da face (seios paranasais)','Mastoide / ouvido / osso temporal','Pescoço (tireoide, laringe, partes moles cervicais)','Coluna vertebral','Tórax','Cardiovascular','KIT (tórax + abdome + pelve)','Abdome','Pelve e trato urogenital','Musculoesquelético','Mama','Ginecológica / obstétrica','Pediátrica / neonatal','Outro'])}</select>
           </div>
         </div>
         <div class="grid3" style="margin-bottom:10px">
