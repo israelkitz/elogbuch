@@ -292,7 +292,8 @@ textarea{resize:vertical;min-height:64px}
     <label class="btn btn-outline" style="cursor:pointer">Importar CSV/Excel
       <input type="file" id="import-file" accept=".csv,.xlsx,.xls" style="display:none" onchange="importFile(this)">
     </label>
-    <button class="btn btn-warn" onclick="syncSheets()" id="btn-sync">Sincronizar Google Sheets</button>
+    <button class="btn btn-warn" onclick="syncSend()" id="btn-sync-send">Enviar para Sheets</button>
+    <button class="btn btn-info" onclick="syncReceive()" id="btn-sync-receive" style="background:#185FA5;color:#fff;border:none">Receber do Sheets</button>
   </div>
   <div id="sync-status" style="display:none" class="gs-status"></div>
   <div id="cases-list"></div>
@@ -954,34 +955,80 @@ function importFile(input){
   input.value='';
 }
 
-function syncSheets(){
+function syncSend(){
   const url=localStorage.getItem(GSKEY)||GS_DEFAULT;
   const st=document.getElementById('sync-status');
-  if(!url){st.textContent='Configure a URL na aba Configurar.';st.className='gs-status gs-err';st.style.display='block';return;}
-  if(!cases.length){st.textContent='Nenhum caso para sincronizar.';st.className='gs-status gs-info';st.style.display='block';return;}
-  const btn=document.getElementById('btn-sync');
+  if(!cases.length){st.textContent='Nenhum caso para enviar.';st.className='gs-status gs-info';st.style.display='block';return;}
+  const btn=document.getElementById('btn-sync-send');
   btn.textContent='Enviando...';btn.disabled=true;
-  st.textContent='Conectando ao Google Sheets...';st.className='gs-status gs-info';st.style.display='block';
+  st.textContent='Enviando casos para o Google Sheets...';st.className='gs-status gs-info';st.style.display='block';
   const cbName='gsCallback_'+Date.now();
   const encoded=encodeURIComponent(JSON.stringify({cases}));
   const scriptUrl=url+(url.includes('?')?'&':'?')+'callback='+cbName+'&data='+encoded;
   const timeout=setTimeout(()=>{
     cleanup();
     st.textContent='Tempo esgotado. Verifique a URL e as configurações de implantação.';
-    st.className='gs-status gs-err';btn.textContent='Sincronizar Google Sheets';btn.disabled=false;
+    st.className='gs-status gs-err';btn.textContent='Enviar para Sheets';btn.disabled=false;
   },15000);
   function cleanup(){clearTimeout(timeout);delete window[cbName];const s=document.getElementById('jsonp-s');if(s)s.remove();}
   window[cbName]=function(data){
     cleanup();
-    if(data&&data.ok){st.textContent='Sincronizado! '+data.count+' caso(s) enviados ao Google Sheets.';st.className='gs-status gs-ok';}
-    else{st.textContent='Erro: '+(data&&data.error?data.error:'resposta inválida.');st.className='gs-status gs-err';}
-    btn.textContent='Sincronizar Google Sheets';btn.disabled=false;
+    if(data&&data.ok){
+      st.textContent='Enviado! '+data.count+' caso(s) novo(s) adicionado(s) ao Google Sheets.';
+      st.className='gs-status gs-ok';
+    } else {
+      st.textContent='Erro: '+(data&&data.error?data.error:'resposta inválida.');
+      st.className='gs-status gs-err';
+    }
+    btn.textContent='Enviar para Sheets';btn.disabled=false;
   };
   const script=document.createElement('script');
   script.id='jsonp-s';script.src=scriptUrl;
   script.onerror=function(){
-    cleanup();st.textContent='Erro ao carregar o script. Verifique a URL e as configurações de implantação.';
-    st.className='gs-status gs-err';btn.textContent='Sincronizar Google Sheets';btn.disabled=false;
+    cleanup();st.textContent='Erro ao conectar. Verifique a URL nas configurações.';
+    st.className='gs-status gs-err';btn.textContent='Enviar para Sheets';btn.disabled=false;
+  };
+  document.head.appendChild(script);
+}
+
+function syncReceive(){
+  const url=localStorage.getItem(GSKEY)||GS_DEFAULT;
+  const st=document.getElementById('sync-status');
+  const btn=document.getElementById('btn-sync-receive');
+  btn.textContent='Recebendo...';btn.disabled=true;
+  st.textContent='Buscando casos do Google Sheets...';st.className='gs-status gs-info';st.style.display='block';
+  const cbName='gsCallback_'+Date.now();
+  const scriptUrl=url+(url.includes('?')?'&':'?')+'callback='+cbName+'&action=read';
+  const timeout=setTimeout(()=>{
+    cleanup();
+    st.textContent='Tempo esgotado. Verifique a URL e as configurações de implantação.';
+    st.className='gs-status gs-err';btn.textContent='Receber do Sheets';btn.disabled=false;
+  },15000);
+  function cleanup(){clearTimeout(timeout);delete window[cbName];const s=document.getElementById('jsonp-r');if(s)s.remove();}
+  window[cbName]=function(data){
+    cleanup();
+    if(data&&data.ok){
+      if(data.cases.length===0){
+        st.textContent='Nenhum caso encontrado na planilha.';
+        st.className='gs-status gs-info';
+      } else {
+        cases=data.cases;
+        persist();
+        renderCases();
+        st.textContent='Recebido! '+data.cases.length+' caso(s) carregado(s) do Google Sheets.';
+        st.className='gs-status gs-ok';
+      }
+    } else {
+      st.textContent='Erro: '+(data&&data.error?data.error:'resposta inválida.');
+      st.className='gs-status gs-err';
+    }
+    btn.textContent='Receber do Sheets';btn.disabled=false;
+  };
+  const script=document.createElement('script');
+  script.id='jsonp-r';script.src=scriptUrl;
+  script.onerror=function(){
+    cleanup();st.textContent='Erro ao conectar. Verifique a URL nas configurações.';
+    st.className='gs-status gs-err';btn.textContent='Receber do Sheets';btn.disabled=false;
   };
   document.head.appendChild(script);
 }
