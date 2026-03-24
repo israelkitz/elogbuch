@@ -1055,36 +1055,66 @@ function importFile(input){
 function syncSend(){
   const url=localStorage.getItem(GSKEY)||GS_DEFAULT;
   const st=document.getElementById('sync-status');
-  if(!cases.length){st.textContent='Nenhum caso para enviar.';st.className='gs-status gs-info';st.style.display='block';return;}  const btn=document.getElementById('btn-sync-send');
-  btn.textContent='Enviando...';btn.disabled=true;
-  st.textContent='Enviando casos para o Google Sheets...';st.className='gs-status gs-info';st.style.display='block';
-  const cbName='gsCallback_'+Date.now();
-  const encoded=encodeURIComponent(JSON.stringify({cases}));
-  const scriptUrl=url+(url.includes('?')?'&':'?')+'callback='+cbName+'&data='+encoded;
-  const timeout=setTimeout(()=>{
-    cleanup();
-    st.textContent='Tempo esgotado. Verifique a URL e as configurações de implantação.';
-    st.className='gs-status gs-err';btn.textContent='Enviar para Sheets';btn.disabled=false;
-  },15000);
-  function cleanup(){clearTimeout(timeout);delete window[cbName];const s=document.getElementById('jsonp-s');if(s)s.remove();}
-  window[cbName]=function(data){
-    cleanup();
-    if(data&&data.ok){
-      st.textContent='Enviado! '+data.count+' caso(s) novo(s) adicionado(s) ao Google Sheets.';
+  if(!cases.length){
+    st.textContent='Nenhum caso para enviar.';
+    st.className='gs-status gs-info';
+    st.style.display='block';
+    return;
+  }
+  const btn=document.getElementById('btn-sync-send');
+  btn.disabled=true;
+  st.style.display='block';
+
+  const BATCH=10;
+  const batches=[];
+  for(let i=0;i<cases.length;i+=BATCH) batches.push(cases.slice(i,i+BATCH));
+  let batchIdx=0;
+  let totalAdded=0;
+
+  function sendBatch(){
+    if(batchIdx>=batches.length){
+      st.textContent='Enviado! '+totalAdded+' caso(s) novo(s) adicionado(s) ao Google Sheets.';
       st.className='gs-status gs-ok';
-    } else {
-      st.textContent='Erro: '+(data&&data.error?data.error:'resposta inválida.');
-      st.className='gs-status gs-err';
+      btn.textContent='Enviar para Sheets';btn.disabled=false;
+      return;
     }
-    btn.textContent='Enviar para Sheets';btn.disabled=false;
-  };
-  const script=document.createElement('script');
-  script.id='jsonp-s';script.src=scriptUrl;
-  script.onerror=function(){
-    cleanup();st.textContent='Erro ao conectar. Verifique a URL nas configurações.';
-    st.className='gs-status gs-err';btn.textContent='Enviar para Sheets';btn.disabled=false;
-  };
-  document.head.appendChild(script);
+    st.textContent='Enviando lote '+(batchIdx+1)+' de '+batches.length+'...';
+    st.className='gs-status gs-info';
+    const cbName='gsCallback_'+Date.now();
+    const encoded=encodeURIComponent(JSON.stringify({cases:batches[batchIdx]}));
+    const scriptUrl=url+(url.includes('?')?'&':'?')+'callback='+cbName+'&data='+encoded;
+    const timeout=setTimeout(()=>{
+      cleanup();
+      st.textContent='Tempo esgotado no lote '+(batchIdx+1)+'. Verifique a URL e as configurações.';
+      st.className='gs-status gs-err';
+      btn.textContent='Enviar para Sheets';btn.disabled=false;
+    },20000);
+    function cleanup(){clearTimeout(timeout);delete window[cbName];const s=document.getElementById('jsonp-s');if(s)s.remove();}
+    window[cbName]=function(data){
+      cleanup();
+      if(data&&data.ok){
+        totalAdded+=data.count||0;
+        batchIdx++;
+        sendBatch();
+      } else {
+        st.textContent='Erro no lote '+(batchIdx+1)+': '+(data&&data.error?data.error:'resposta inválida.');
+        st.className='gs-status gs-err';
+        btn.textContent='Enviar para Sheets';btn.disabled=false;
+      }
+    };
+    const script=document.createElement('script');
+    script.id='jsonp-s';script.src=scriptUrl;
+    script.onerror=function(){
+      cleanup();
+      st.textContent='Erro ao conectar no lote '+(batchIdx+1)+'. Verifique a URL nas configurações.';
+      st.className='gs-status gs-err';
+      btn.textContent='Enviar para Sheets';btn.disabled=false;
+    };
+    document.head.appendChild(script);
+  }
+
+  btn.textContent='Enviando...';
+  sendBatch();
 }
 
 function syncReceive(){
