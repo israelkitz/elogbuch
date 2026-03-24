@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Case Log — Radiologia</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh}
@@ -140,7 +141,6 @@ textarea{resize:vertical;min-height:64px}
   <button class="tab" onclick="showTab('config')">Configurar</button>
 </div>
 
-<!-- REGISTRAR -->
 <div id="tab-registrar" class="section active">
 <div class="card">
   <div class="sect-title" style="margin-top:0">Identificação</div>
@@ -261,7 +261,6 @@ textarea{resize:vertical;min-height:64px}
 </div>
 </div>
 
-<!-- CASOS -->
 <div id="tab-casos" class="section">
   <div class="filter-panel">
     <div class="filter-grid" style="margin-bottom:8px">
@@ -322,7 +321,6 @@ textarea{resize:vertical;min-height:64px}
   <div id="cases-list"></div>
 </div>
 
-<!-- PAINEL -->
 <div id="tab-painel" class="section">
   <div class="stat-grid" id="stat-cards"></div>
   <div class="card"><div class="sect-title" style="margin-top:0">Status dos laudos</div><div id="bar-status"></div></div>
@@ -331,7 +329,6 @@ textarea{resize:vertical;min-height:64px}
   <div class="card"><div class="sect-title" style="margin-top:0">Revisões por preceptor</div><div id="bar-preceptor"></div></div>
 </div>
 
-<!-- CONFIG -->
 <div id="tab-config" class="section">
   <div class="netlify-box">
     <p style="font-size:13px;font-weight:600;color:#0C447C;margin-bottom:8px">Hospedar online com Netlify Drop — grátis e sem cadastro</p>
@@ -340,14 +337,11 @@ textarea{resize:vertical;min-height:64px}
       <li>Arraste e solte o arquivo <strong>case_log_radiologia.html</strong> na área indicada</li>
       <li>Em segundos você recebe uma URL — ex: <strong>meu-caselog.netlify.app</strong></li>
       <li>Abra essa URL em qualquer dispositivo: celular, tablet, outro computador</li>
-      <li>Crie uma conta gratuita para personalizar a URL e poder reupar versões atualizadas</li>
     </ol>
-    <p style="font-size:11px;color:#378ADD;margin-top:8px">Cada navegador tem seu próprio armazenamento local. Use "Sincronizar Google Sheets" para centralizar os dados de todos os dispositivos.</p>
   </div>
 
   <div class="card">
     <div class="sect-title" style="margin-top:0">Autenticação — Cloudflare Worker</div>
-    <p style="font-size:13px;color:#888;margin-bottom:10px">Cole aqui a URL do seu Worker para ativar a autenticação segura. Sem isso, qualquer pessoa que saiba da URL pode tentar acessar.</p>
     <div class="field" style="margin-bottom:10px">
       <label>URL do Worker</label>
       <input id="cfg-workerurl" placeholder="https://caselog-auth.SEU-USUARIO.workers.dev">
@@ -358,9 +352,6 @@ textarea{resize:vertical;min-height:64px}
       <span id="worker-cfg-msg" class="msg" style="display:inline-block;margin-left:4px"></span>
     </div>
     <div id="worker-test-result" style="display:none" class="gs-status"></div>
-    <div style="background:#f5f5f3;border-radius:8px;padding:12px;font-size:12px;color:#888;line-height:1.7;margin-top:4px">
-      <strong style="color:#1a1a1a">Como funciona:</strong> a senha nunca fica no código HTML. Quando alguém tenta entrar, o app envia a senha digitada para o seu Worker no Cloudflare, que compara com a senha guardada lá e responde só "certo" ou "errado". Nem você consegue ver a senha olhando o código-fonte.
-    </div>
   </div>
 
   <div class="card">
@@ -377,104 +368,12 @@ textarea{resize:vertical;min-height:64px}
 
   <div class="card">
     <div class="sect-title" style="margin-top:0">Sincronização Google Sheets</div>
-    <div class="highlight">Método JSONP — contorna o bloqueio de CORS. Use o script abaixo com <strong>Executar como: Eu</strong> e <strong>Acesso: Qualquer pessoa</strong>.</div>
-    <div style="margin-top:12px" class="field">
-      <label>URL do Apps Script Web App</label>
-      <input id="cfg-gsurl" placeholder="https://script.google.com/macros/s/.../exec">
-    </div>
-    <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
-      <button class="btn btn-primary" onclick="saveGSConfig()">Salvar URL</button>
-      <span id="gs-cfg-msg" class="msg" style="display:inline-block"></span>
-    </div>
-    <div style="margin-top:14px;border-top:1px solid #f0f0f0;padding-top:14px">
-      <p style="font-size:12px;font-weight:600;margin-bottom:4px">Script do Apps Script</p>
-      <p style="font-size:12px;color:#888;margin-bottom:6px">Selecione tudo no editor, apague e cole este script. Depois crie uma nova implantação.</p>
-      <div class="script-box" id="script-box">function doGet(e) {
-  var callback = e.parameter.callback;
-  var action = e.parameter.action;
-  var data = e.parameter.data;
-  try {
-    var sheet = SpreadsheetApp
-      .getActiveSpreadsheet().getActiveSheet();
-
-    if (action === 'read') {
-      var lastRow = sheet.getLastRow();
-      if (lastRow < 2) {
-        return ContentService.createTextOutput(
-          callback+'('+JSON.stringify({ok:true,cases:[]})+')' 
-        ).setMimeType(ContentService.MimeType.JAVASCRIPT);
-      }
-      var rows = sheet.getRange(2,1,lastRow-1,21).getValues();
-      var cases = rows.filter(function(r){return r[0];}).map(function(r){
-        return {
-          id:r[0],nome:r[1],anoRes:r[2],
-          dataExame:r[3]?Utilities.formatDate(new Date(r[3]),'UTC','yyyy-MM-dd'):'',
-          dataLaudo:r[4]?Utilities.formatDate(new Date(r[4]),'UTC','yyyy-MM-dd'):'',
-          local:r[5],paciente:r[6],regpaciente:r[7],
-          dtnasc:r[8]?Utilities.formatDate(new Date(r[8]),'UTC','yyyy-MM-dd'):'',
-          idade:r[9],modal:r[10],area:r[11],
-          nivel:r[12],tipo:r[13],dif:r[14],
-          statusLaudo:r[15]==='Pré-laudo liberado'?'pre-laudo'
-            :r[15]==='Revisado pelo preceptor'?'revisado':'',
-          preceptor:r[16],diag:r[17],nota:r[18],
-          prelaudoTxt:r[19],laudoRevTxt:r[20]
-        };
-      });
-      return ContentService.createTextOutput(
-        callback+'('+JSON.stringify({ok:true,cases:cases})+')'
-      ).setMimeType(ContentService.MimeType.JAVASCRIPT);
-    }
-
-    var headers = ["ID","Nome","Ano","Data Exame","Data Laudo",
-      "Hospital","Paciente","Registro Paciente","Data Nascimento",
-      "Idade no Exame","Modalidade","Área","Nível","Tipo",
-      "Dificuldade","Status Laudo","Preceptor","Diagnóstico",
-      "Notas","Pré-laudo texto","Laudo revisado texto"];
-
-    if (sheet.getLastRow() === 0) sheet.appendRow(headers);
-
-    var lastRow = sheet.getLastRow();
-    var existingIds = [];
-    if (lastRow > 1) {
-      var idCol = sheet.getRange(2,1,lastRow-1,1).getValues();
-      existingIds = idCol.map(function(r){return String(r[0]);});
-    }
-
-    var added = 0;
-    var parsed = JSON.parse(decodeURIComponent(data));
-    parsed.cases.forEach(function(c) {
-      if (existingIds.indexOf(String(c.id)) !== -1) return;
-      var sl = c.statusLaudo === 'pre-laudo' ? 'Pré-laudo liberado'
-             : c.statusLaudo === 'revisado' ? 'Revisado pelo preceptor' : '';
-      sheet.appendRow([c.id,c.nome,c.anoRes,
-        c.dataExame,c.dataLaudo,c.local,c.paciente,
-        c.regpaciente||'',c.dtnasc||'',c.idade||'',
-        c.modal,c.area,c.nivel,c.tipo,c.dif,sl,
-        c.preceptor,c.diag,c.nota,
-        c.prelaudoTxt||'',c.laudoRevTxt||'']);
-      added++;
-    });
-
-    return ContentService.createTextOutput(
-      callback+'('+JSON.stringify({ok:true,count:added})+')'
-    ).setMimeType(ContentService.MimeType.JAVASCRIPT);
-
-  } catch(err) {
-    return ContentService.createTextOutput(
-      callback+'('+JSON.stringify({ok:false,error:err.message})+')'
-    ).setMimeType(ContentService.MimeType.JAVASCRIPT);
-  }
-}</div>
-      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
-        <button class="btn btn-outline" style="font-size:12px" onclick="copyScript()">Copiar script</button>
-        <span id="copy-msg" class="msg msg-ok" style="display:none">Copiado!</span>
-      </div>
-    </div>
+    <p style="font-size:12px;color:#888;margin-bottom:10px">O código do Apps Script (doPost e doGet) já está configurado na sua planilha.</p>
   </div>
 
   <div class="card">
-    <div class="sect-title" style="margin-top:0">Dados locais</div>
-    <button class="btn btn-outline" style="color:#A32D2D;border-color:#A32D2D" onclick="if(confirm('Apagar todos os casos? Esta ação não pode ser desfeita.'))clearAll()">Limpar todos os casos</button>
+    <div class="sect-title" style="margin-top:0">Dados locais (IndexedDB Ativado)</div>
+    <button class="btn btn-outline" style="color:#A32D2D;border-color:#A32D2D" onclick="if(confirm('Apagar todos os casos? Esta ação não pode ser desfeita.'))clearAll()">Limpar todos os casos do aparelho</button>
   </div>
 </div>
 </div>
@@ -528,25 +427,40 @@ function unlockApp(){
   sessionStorage.setItem(_sk,'1');
   document.getElementById('login-screen').classList.add('hidden');
   document.getElementById('app-wrapper').classList.add('visible');
-  initApp();
+  loadCasesAndInit();
 }
 
 function checkAuth(){
   if(sessionStorage.getItem(_sk)==='1'){
     document.getElementById('login-screen').classList.add('hidden');
     document.getElementById('app-wrapper').classList.add('visible');
+    loadCasesAndInit();
     return true;
   }
   setTimeout(()=>document.getElementById('login-input').focus(),100);
   return false;
 }
 
+// Inicialização com LocalForage (IndexedDB)
+function loadCasesAndInit() {
+  localforage.getItem(STORE).then(function(val) {
+    if(val) cases = val;
+    initApp();
+    renderCases();
+    renderPanel();
+  }).catch(function(err) {
+    console.error("Erro ao carregar do IndexedDB:", err);
+    initApp();
+  });
+}
+
 const STORE='radio_caselog_v6';
 const PROF='radio_prof_v6';
-const GSKEY='radio_gsurl';
-const GS_DEFAULT='https://script.google.com/macros/s/AKfycbwkXy7lDa4oC_Gh3NQvvtmOW9zByjvN2G_b4aw3cvH2kfvdFerHeJ4tVYOop2XzslYS/exec';
-let cases=JSON.parse(localStorage.getItem(STORE)||'[]');
-let newStatus='';
+const URL_FIXA_DO_GOOGLE = "https://script.google.com/macros/s/AKfycbwkXy7lDa4oC_Gh3NQvvtmOW9zByjvN2G_b4aw3cvH2kfvdFerHeJ4tVYOop2XzslYS/exec";
+
+// A array 'cases' agora começa vazia e é preenchida pelo IndexedDB
+let cases = [];
+let newStatus = '';
 
 const MCOL={'Radiografia (RX)':'b-blue','Tomografia (TC)':'b-teal','Ressonância Magnética (RM)':'b-amber',
 'Ultrassonografia (US)':'b-green','Mamografia':'b-coral','PET-CT':'b-purple',
@@ -582,7 +496,11 @@ function setStatus(s,prefix){
   if(s!=='revisado'){const p=document.getElementById(prefix+'f-preceptor');if(p)p.value='';}
 }
 
-function persist(){localStorage.setItem(STORE,JSON.stringify(cases));}
+// Nova função de persistência que usa IndexedDB sem limite de tamanho
+function persist(){
+  localforage.setItem(STORE, cases).catch(err => console.error("Erro ao salvar no IndexedDB:", err));
+}
+
 function flash(id,txt,cls){const e=document.getElementById(id);if(!e)return;e.textContent=txt;e.className='msg '+cls;e.style.display='inline-block';setTimeout(()=>e.style.display='none',2500);}
 function showMsg(id,txt,cls){const e=document.getElementById(id);if(!e)return;e.textContent=txt;e.className='msg '+cls;e.style.display='block';setTimeout(()=>e.style.display='none',3500);}
 
@@ -630,10 +548,8 @@ function loadConfig(){
   const p=JSON.parse(localStorage.getItem(PROF)||'{}');
   if(p.nome)document.getElementById('cfg-nome').value=p.nome;
   if(p.ano)document.getElementById('cfg-ano').value=p.ano;
-  document.getElementById('cfg-gsurl').value=localStorage.getItem(GSKEY)||GS_DEFAULT;
   document.getElementById('cfg-workerurl').value=localStorage.getItem(WORKER_KEY)||'';
 }
-function saveGSConfig(){localStorage.setItem(GSKEY,document.getElementById('cfg-gsurl').value.trim());flash('gs-cfg-msg','URL salva.','msg-ok');}
 
 function toggleDoppler(){
   const modal=document.getElementById('f-modal').value;
@@ -732,7 +648,6 @@ function deleteCase(id){
   cases=cases.filter(c=>c.id!==id);persist();renderCases();
 }
 
-// ---- DIFF ENGINE (word-level LCS) ----
 function diffWords(a,b){
   const wa=a.split(/(\s+)/),wb=b.split(/(\s+)/);
   const m=wa.length,n=wb.length;
@@ -837,7 +752,7 @@ function saveEdit(id){
     doppler:getV('doppler'),
     tipo:getV('tipo'),dif:getV('dif'),statusLaudo:sl,preceptor,
     diag:get('diag'),nota:get('nota'),
-    prelaudoTxt:get('prelaudo'),laudoRevTxt:get('laudorev')
+    prelaudoTxt:get('prelaudo'),laudorevTxt:get('laudorev')
   };
   persist();renderCases();
 }
@@ -1052,73 +967,48 @@ function importFile(input){
   input.value='';
 }
 
-function syncSend(){
-  const url=localStorage.getItem(GSKEY)||GS_DEFAULT;
-  const st=document.getElementById('sync-status');
-  if(!cases.length){
-    st.textContent='Nenhum caso para enviar.';
-    st.className='gs-status gs-info';
-    st.style.display='block';
+function syncSend() {
+  const st = document.getElementById('sync-status');
+  const btn = document.getElementById('btn-sync-send');
+  
+  if (!cases.length) {
+    st.textContent = 'Nenhum caso para enviar.';
+    st.className = 'gs-status gs-info';
+    st.style.display = 'block';
     return;
   }
-  const btn=document.getElementById('btn-sync-send');
-  btn.disabled=true;
-  st.style.display='block';
 
-  const BATCH=10;
-  const batches=[];
-  for(let i=0;i<cases.length;i+=BATCH) batches.push(cases.slice(i,i+BATCH));
-  let batchIdx=0;
-  let totalAdded=0;
+  btn.textContent = 'Enviando...';
+  btn.disabled = true;
+  st.textContent = 'Enviando ' + cases.length + ' casos para o Sheets...';
+  st.className = 'gs-status gs-info';
+  st.style.display = 'block';
 
-  function sendBatch(){
-    if(batchIdx>=batches.length){
-      st.textContent='Enviado! '+totalAdded+' caso(s) novo(s) adicionado(s) ao Google Sheets.';
-      st.className='gs-status gs-ok';
-      btn.textContent='Enviar para Sheets';btn.disabled=false;
-      return;
-    }
-    st.textContent='Enviando lote '+(batchIdx+1)+' de '+batches.length+'...';
-    st.className='gs-status gs-info';
-    const cbName='gsCallback_'+Date.now();
-    const encoded=encodeURIComponent(JSON.stringify({cases:batches[batchIdx]}));
-    const scriptUrl=url+(url.includes('?')?'&':'?')+'callback='+cbName+'&data='+encoded;
-    const timeout=setTimeout(()=>{
-      cleanup();
-      st.textContent='Tempo esgotado no lote '+(batchIdx+1)+'. Verifique a URL e as configurações.';
-      st.className='gs-status gs-err';
-      btn.textContent='Enviar para Sheets';btn.disabled=false;
-    },20000);
-    function cleanup(){clearTimeout(timeout);delete window[cbName];const s=document.getElementById('jsonp-s');if(s)s.remove();}
-    window[cbName]=function(data){
-      cleanup();
-      if(data&&data.ok){
-        totalAdded+=data.count||0;
-        batchIdx++;
-        sendBatch();
-      } else {
-        st.textContent='Erro no lote '+(batchIdx+1)+': '+(data&&data.error?data.error:'resposta inválida.');
-        st.className='gs-status gs-err';
-        btn.textContent='Enviar para Sheets';btn.disabled=false;
-      }
-    };
-    const script=document.createElement('script');
-    script.id='jsonp-s';script.src=scriptUrl;
-    script.onerror=function(){
-      cleanup();
-      st.textContent='Erro ao conectar no lote '+(batchIdx+1)+'. Verifique a URL nas configurações.';
-      st.className='gs-status gs-err';
-      btn.textContent='Enviar para Sheets';btn.disabled=false;
-    };
-    document.head.appendChild(script);
-  }
-
-  btn.textContent='Enviando...';
-  sendBatch();
+  fetch(URL_FIXA_DO_GOOGLE, {
+    method: "POST",
+    mode: "no-cors",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(cases) 
+  })
+  .then(() => {
+    st.textContent = 'Casos enviados com sucesso! Verifique a planilha.';
+    st.className = 'gs-status gs-ok';
+    btn.textContent = 'Enviar para Sheets';
+    btn.disabled = false;
+  })
+  .catch(err => {
+    console.error("Erro ao sincronizar:", err);
+    st.textContent = 'Erro ao enviar. Verifique sua conexão internet.';
+    st.className = 'gs-status gs-err';
+    btn.textContent = 'Enviar para Sheets';
+    btn.disabled = false;
+  });
 }
 
 function syncReceive(){
-  const url=localStorage.getItem(GSKEY)||GS_DEFAULT;
+  const url=URL_FIXA_DO_GOOGLE;
   const st=document.getElementById('sync-status');
   const btn=document.getElementById('btn-sync-receive');
   btn.textContent='Recebendo...';btn.disabled=true;
@@ -1141,6 +1031,7 @@ function syncReceive(){
         cases=data.cases;
         persist();
         renderCases();
+        renderPanel();
         st.textContent='Recebido! '+data.cases.length+' caso(s) carregado(s) do Google Sheets.';
         st.className='gs-status gs-ok';
       }
@@ -1159,10 +1050,6 @@ function syncReceive(){
   document.head.appendChild(script);
 }
 
-function copyScript(){
-  navigator.clipboard.writeText(document.getElementById('script-box').textContent)
-    .then(()=>{const m=document.getElementById('copy-msg');m.style.display='inline';setTimeout(()=>m.style.display='none',2000);});
-}
 function clearAll(){cases=[];persist();renderCases();renderPanel();}
 
 function initApp(){
