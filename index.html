@@ -742,8 +742,10 @@ function saveEdit(id){
   const selRev=document.querySelector('#edit-'+id+' .stbtn.sel-rev');
   const sl=selRev?'revisado':selPre?'pre-laudo':'';
   const preceptor=get('f-preceptor');
+  
   if(sl==='revisado'&&!preceptor){alert('Informe o nome do preceptor revisor.');return;}
   const idx=cases.findIndex(x=>x.id===id);if(idx<0)return;
+  
   cases[idx]={...cases[idx],
     dataExame:getV('dataExame'),dataLaudo:getV('dataLaudo'),
     local:get('local'),paciente:get('paciente'),regpaciente:get('regpaciente'),
@@ -752,9 +754,12 @@ function saveEdit(id){
     doppler:getV('doppler'),
     tipo:getV('tipo'),dif:getV('dif'),statusLaudo:sl,preceptor,
     diag:get('diag'),nota:get('nota'),
-    prelaudoTxt:get('prelaudo'),laudorevTxt:get('laudorev')
+    prelaudoTxt:get('prelaudo'),
+    laudoRevTxt:get('laudorev') // <-- ERRO CORRIGIDO AQUI (R maiúsculo)
   };
-  persist();renderCases();
+  
+  persist();
+  renderCases();
 }
 
 function selOpts(sel,opts){return opts.map(o=>`<option${sel===o?' selected':''}>${o}</option>`).join('');}
