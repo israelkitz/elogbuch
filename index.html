@@ -127,8 +127,6 @@ body.dark .case-card:hover{box-shadow: 0 6px 16px rgba(0,0,0,0.4);}
 .login-hint{font-size:11px;color:var(--text4);margin-top:16px;line-height:1.6}
 #app-wrapper{display:none}
 #app-wrapper.visible{display:block}
-#dark-toggle{position:fixed;top:13px;right:20px;z-index:100;background:var(--card-bg);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;color:var(--text);font-family:inherit;transition:background .2s}
-#dark-toggle:hover{background:var(--bg3)}
 
 .pagination {display:flex;justify-content:center;align-items:center;gap:6px;margin-top:24px;margin-bottom:8px;flex-wrap:wrap}
 .page-btn {background:var(--card-bg);color:var(--text3);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
@@ -137,16 +135,31 @@ body.dark .case-card:hover{box-shadow: 0 6px 16px rgba(0,0,0,0.4);}
 .page-btn:disabled {opacity:.4;cursor:not-allowed}
 .page-dots {color:var(--text4);font-size:14px;padding:0 4px}
 
-.form-split { display: grid; gap: 16px; grid-template-columns: 1fr; }
+/* Layout em duas colunas Super Compacto (Sem Scroll no Desktop) */
+.form-split { display: grid; gap: 14px; grid-template-columns: 1fr; }
 @media(min-width: 850px) { 
-  .form-split { grid-template-columns: 1fr 1fr; align-items: start; } 
-  .compact-ta { min-height: 140px !important; } 
+  .container { padding-top: 12px; }
+  .tabs { margin-bottom: 14px; }
+  
+  /* Trava a altura do formulário ao tamanho exato da janela visível */
+  .form-split { grid-template-columns: 1fr 1fr; align-items: stretch; height: calc(100vh - 130px); } 
+  #tab-registrar .card { padding: 14px 20px; display: flex; flex-direction: column; height: 100%; overflow: hidden; margin-bottom: 0; }
+  
+  /* Reduz os espaçamentos verticais para tudo caber */
+  #tab-registrar .card > div { margin-bottom: 10px !important; }
+  .sect-title { margin-top: 0 !important; margin-bottom: 8px !important; }
+  
+  /* Ajusta os campos de texto para não empurrarem a tela para baixo */
+  .compact-ta { min-height: 70px !important; }
+  #f-nota { min-height: 40px !important; }
+  
+  /* Empurra os botões de Salvar/Limpar exatamente para o rodapé da caixa */
+  .btn-row { margin-top: auto !important; margin-bottom: 0 !important; }
 }
 </style>
 </head>
 <body>
 
-<button id="dark-toggle" onclick="toggleDark()" title="Alternar modo noturno">🌙</button>
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">Case Log — Radiologia</div>
@@ -160,12 +173,13 @@ body.dark .case-card:hover{box-shadow: 0 6px 16px rgba(0,0,0,0.4);}
 </div>
 
 <div id="app-wrapper">
-<div class="topbar">
-  <div>
-    <div class="topbar-title">Case Log — Radiologia</div>
-  </div>
-</div>
 <div class="container">
+  
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
+    <div style="font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.5px;">Case Log — Radiologia</div>
+    <button id="dark-toggle" onclick="toggleDark()" title="Alternar modo noturno" style="background: var(--card-bg); border: 1px solid var(--border2); border-radius: 8px; padding: 6px 12px; cursor: pointer; color: var(--text); font-size: 14px; transition: background 0.2s;">🌙</button>
+  </div>
+
 <div class="tabs">
   <button class="tab active" onclick="showTab('registrar')">Registrar caso</button>
   <button class="tab" onclick="showTab('casos')">Meus casos</button>
