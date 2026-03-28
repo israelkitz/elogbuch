@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Case Log — Radiologia</title>
+<title>Radiologia</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 <style>
@@ -156,13 +156,134 @@ body.dark .case-card:hover{box-shadow: 0 6px 16px rgba(0,0,0,0.4);}
   /* Empurra os botões de Salvar/Limpar exatamente para o rodapé da caixa */
   .btn-row { margin-top: auto !important; margin-bottom: 0 !important; }
 }
+
+/* =========================================
+   PACOTE VISUAL PREMIUM (PROFISSIONAL)
+   ========================================= */
+
+/* 1. Fonte premium (Inter) importada do Google */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+body, input, select, textarea, button { 
+  font-family: 'Inter', -apple-system, sans-serif !important; 
+}
+
+/* 2. Scrollbar (Barra de rolagem) customizada e discreta */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+/* 3. Sombras suaves nos cards para dar profundidade de software nativo */
+.card {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid var(--border) !important;
+}
+body.dark .card {
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2) !important;
+  border-color: rgba(255,255,255, 0.05) !important;
+}
+
+/* 4. Transições suaves e "Anel de foco" (Focus Ring) nos inputs */
+input, select, textarea {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  border-color: var(--text) !important;
+  /* Cria uma aura suave ao redor do campo ativo */
+  box-shadow: 0 0 0 3px var(--border) !important; 
+}
+body.dark input:focus, body.dark select:focus, body.dark textarea:focus {
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* 5. Botões mais responsivos (efeito tátil ao clicar) */
+.btn, .stbtn, .page-btn {
+  transition: all 0.2s ease !important;
+}
+.btn:active, .stbtn:active, .page-btn:active {
+  transform: scale(0.97); /* Dá uma leve "afundada" quando você clica */
+}
+
+/* =========================================
+   MELHORIA DE LEITURA DO DIFF (MODO ESCURO)
+   ========================================= */
+body.dark .diff-add {
+  background: rgba(46, 204, 113, 0.15) !important; /* Fundo verde translúcido e suave */
+  color: #6ee7b7 !important; /* Texto verde claro brilhante */
+}
+body.dark .diff-del {
+  background: rgba(239, 68, 68, 0.15) !important; /* Fundo vermelho translúcido e suave */
+  color: #fca5a5 !important; /* Texto vermelho/salmão claro brilhante */
+}
+/* Atualiza as cores das "bolinhas" da legenda para combinarem */
+body.dark .leg-add { background: #10B981 !important; }
+body.dark .leg-del { background: #EF4444 !important; }
+
+/* =========================================
+   MELHORIAS: TOASTS E DROPDOWNS
+   ========================================= */
+
+/* Melhoria 2: Dropdowns Customizados (Seta moderna) */
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23888%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 12px center !important;
+  background-size: 14px !important;
+  padding-right: 36px !important;
+}
+body.dark select {
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23bbb%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E") !important;
+}
+
+/* Melhoria 1: Notificações Flutuantes (Toasts) */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9999;
+  pointer-events: none;
+}
+.toast {
+  background: var(--card-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: translateX(120%); /* Começa fora da tela */
+  opacity: 0;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s;
+  pointer-events: auto;
+}
+.toast.show {
+  transform: translateX(0); /* Desliza para dentro */
+  opacity: 1;
+}
+body.dark .toast {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.toast-ok { border-left: 4px solid #10B981; }
+.toast-err { border-left: 4px solid #EF4444; }
+.toast-info { border-left: 4px solid #3B82F6; }
+
 </style>
 </head>
 <body>
 
 <div id="login-screen">
   <div class="login-box">
-    <div class="login-logo">Case Log — Radiologia</div>
+    <div class="login-logo">Radiologia</div>
     <div class="login-sub">Residência médica · Acesso restrito</div>
     <input type="password" id="login-input" placeholder="••••••••" maxlength="32"
       onkeydown="if(event.key==='Enter')doLogin()">
@@ -176,7 +297,7 @@ body.dark .case-card:hover{box-shadow: 0 6px 16px rgba(0,0,0,0.4);}
 <div class="container">
   
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid var(--border);">
-    <div style="font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.5px;">Case Log — Radiologia</div>
+    <div style="font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.5px;">Radiologia</div>
     <button id="dark-toggle" onclick="toggleDark()" title="Alternar modo noturno" style="background: var(--card-bg); border: 1px solid var(--border2); border-radius: 8px; padding: 6px 12px; cursor: pointer; color: var(--text); font-size: 14px; transition: background 0.2s;">🌙</button>
   </div>
 
@@ -586,8 +707,36 @@ function persist(){
   localforage.setItem(STORE, cases).catch(err => console.error("Erro ao salvar no IndexedDB:", err));
 }
 
-function flash(id,txt,cls){const e=document.getElementById(id);if(!e)return;e.textContent=txt;e.className='msg '+cls;e.style.display='inline-block';setTimeout(()=>e.style.display='none',2500);}
-function showMsg(id,txt,cls){const e=document.getElementById(id);if(!e)return;e.textContent=txt;e.className='msg '+cls;e.style.display='block';setTimeout(()=>e.style.display='none',3500);}
+function flash(id, txt, cls) { showToast(txt, cls); }
+function showMsg(id, txt, cls) { showToast(txt, cls); }
+
+function showToast(txt, cls) {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    document.body.appendChild(container);
+  }
+  
+  const toastCls = cls === 'msg-ok' ? 'toast-ok' : (cls === 'msg-err' ? 'toast-err' : 'toast-info');
+  let icon = 'ℹ️';
+  if(cls === 'msg-ok') icon = '✅';
+  if(cls === 'msg-err') icon = '⚠️';
+
+  const toast = document.createElement('div');
+  toast.className = `toast ${toastCls}`;
+  toast.innerHTML = `<span style="font-size: 16px">${icon}</span> <span>${txt}</span>`;
+  container.appendChild(toast);
+  
+  // Animação de entrada
+  requestAnimationFrame(() => toast.classList.add('show'));
+  
+  // Some e destrói após 3.5 segundos
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 3500);
+}
 
 function saveWorkerConfig(){
   const url=document.getElementById('cfg-workerurl').value.trim();
