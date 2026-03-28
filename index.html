@@ -7,113 +7,146 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
 <style>
+:root{
+  --bg:#f5f5f3;--bg2:#fff;--bg3:#f0f0ee;--border:#e5e5e5;--border2:#d5d5d5;
+  --text:#1a1a1a;--text2:#555;--text3:#888;--text4:#bbb;
+  --input-bg:#fff;--card-bg:#fff;--filter-bg:#f5f5f3;--stat-bg:#f5f5f3;
+  --topbar-bg:#fff;--diff-bg:#fafafa;--script-bg:#f5f5f3;
+}
+body.dark{
+  --bg:#18181b;--bg2:#1e1e22;--bg3:#27272a;--border:#3a3a3e;--border2:#4a4a50;
+  --text:#e8e8e8;--text2:#c0c0c0;--text3:#909090;--text4:#606060;
+  --input-bg:#27272a;--card-bg:#1e1e22;--filter-bg:#27272a;--stat-bg:#27272a;
+  --topbar-bg:#1a1a1d;--diff-bg:#27272a;--script-bg:#27272a;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh}
-.topbar{background:#fff;border-bottom:1px solid #e5e5e5;padding:14px 24px;display:flex;align-items:center;position:sticky;top:0;z-index:10}
-.topbar-title{font-size:15px;font-weight:600}
-.topbar-sub{font-size:12px;color:#888;margin-top:1px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.topbar{background:var(--topbar-bg);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;position:sticky;top:0;z-index:10}
+.topbar-title{font-size:15px;font-weight:600;color:var(--text)}
+.topbar-sub{font-size:12px;color:var(--text3);margin-top:1px}
 .container{max-width:960px;margin:0 auto;padding:24px 16px}
-.tabs{display:flex;gap:2px;border-bottom:1px solid #e5e5e5;margin-bottom:24px;flex-wrap:wrap}
-.tab{padding:9px 16px;font-size:13px;cursor:pointer;border-radius:6px 6px 0 0;color:#888;border:none;background:none;font-family:inherit}
-.tab:hover{color:#1a1a1a;background:#f5f5f3}
-.tab.active{color:#1a1a1a;font-weight:600;border-bottom:2px solid #1a1a1a;background:none}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--border);margin-bottom:24px;flex-wrap:wrap}
+.tab{padding:9px 16px;font-size:13px;cursor:pointer;border-radius:6px 6px 0 0;color:var(--text3);border:none;border-bottom:2px solid transparent;background:none;font-family:inherit}
+.tab:hover{color:var(--text);background:var(--bg3)}
+.tab.active{color:var(--text);font-weight:600;border-bottom:2px solid var(--text);background:none}
 .section{display:none}.section.active{display:block}
-.card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:16px 20px;margin-bottom:12px}
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:12px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 .grid4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
 @media(max-width:600px){.grid2,.grid3,.grid4{grid-template-columns:1fr 1fr}}
 .field{display:flex;flex-direction:column;gap:4px}
-label{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.05em}
-input,select,textarea{font-family:inherit;font-size:13px;width:100%;padding:8px 10px;border:1px solid #d5d5d5;border-radius:8px;background:#fff;color:#1a1a1a;outline:none}
-input:focus,select:focus,textarea:focus{border-color:#1a1a1a}
+label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+input,select,textarea{font-family:inherit;font-size:13px;width:100%;padding:8px 10px;border:1px solid var(--border2);border-radius:8px;background:var(--input-bg);color:var(--text);outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--text)}
+input[readonly]{background:var(--bg3);color:var(--text2)}
 textarea{resize:vertical;min-height:64px}
-.sect-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#aaa;margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid #f0f0f0}
+.sect-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:16px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
 .btn{font-family:inherit;padding:9px 18px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500}
 .btn-primary{background:#1a1a1a;color:#fff;border:none}
-.btn-outline{background:#fff;color:#1a1a1a;border:1px solid #d5d5d5}
+.btn-outline{background:var(--card-bg);color:var(--text);border:1px solid var(--border2)}
 .btn-success{background:#1D9E75;color:#fff;border:none}
 .btn-warn{background:#BA7517;color:#fff;border:none}
+.btn-info{background:#185FA5;color:#fff;border:none}
 .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;justify-content:flex-end;align-items:center}
 .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
 @media(max-width:500px){.stat-grid{grid-template-columns:repeat(2,1fr)}}
-.stat-card{background:#f5f5f3;border-radius:10px;padding:14px;text-align:center}
+.stat-card{background:var(--stat-bg);border-radius:10px;padding:14px;text-align:center}
 .stat-num{font-size:24px;font-weight:700}
-.stat-lbl{font-size:11px;color:#888;margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
-.case-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:14px 16px;margin-bottom:8px}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:2px;text-transform:uppercase;letter-spacing:.04em}
+.case-card{background:var(--card-bg);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px;transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;}
+.case-card:hover{transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.08); border-color: var(--border2);}
+body.dark .case-card:hover{box-shadow: 0 6px 16px rgba(0,0,0,0.4);}
 .case-card.editing{border-color:#378ADD;border-width:1.5px}
 .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500}
 .b-blue{background:#E6F1FB;color:#0C447C}.b-teal{background:#E1F5EE;color:#085041}
 .b-amber{background:#FAEEDA;color:#633806}.b-coral{background:#FAECE7;color:#712B13}
-.b-green{background:#EAF3DE;color:#27500A}.b-gray{background:#f5f5f3;color:#666}
+.b-green{background:#EAF3DE;color:#27500A}.b-gray{background:var(--bg3);color:var(--text2)}
 .b-purple{background:#EEEDFE;color:#3C3489}
 .st-pre{background:#FAEEDA;color:#633806}.st-rev{background:#E1F5EE;color:#085041}
-.del-btn{background:none;border:none;cursor:pointer;color:#bbb;font-size:16px;padding:2px 6px;border-radius:4px}
+.del-btn{background:none;border:none;cursor:pointer;color:var(--text4);font-size:16px;padding:2px 6px;border-radius:4px}
 .del-btn:hover{color:#E24B4A}
-.edit-btn{background:none;border:1px solid #e5e5e5;cursor:pointer;color:#888;font-size:11px;padding:3px 10px;border-radius:6px;font-family:inherit}
-.edit-btn:hover{border-color:#1a1a1a;color:#1a1a1a}
+.edit-btn{background:none;border:1px solid var(--border2);cursor:pointer;color:var(--text3);font-size:11px;padding:3px 10px;border-radius:6px;font-family:inherit}
+.edit-btn:hover{border-color:var(--text);color:var(--text)}
 .diff-btn{background:none;border:1px solid #378ADD;cursor:pointer;color:#185FA5;font-size:11px;padding:3px 10px;border-radius:6px;font-family:inherit;font-weight:500}
 .diff-btn:hover{background:#E6F1FB}
-.filter-panel{background:#f5f5f3;border-radius:12px;padding:12px 14px;margin-bottom:16px}
+.filter-panel{background:var(--filter-bg);border-radius:12px;padding:12px 14px;margin-bottom:16px}
 .filter-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px}
 .filter-grid2{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px}
 @media(max-width:600px){.filter-grid,.filter-grid2{grid-template-columns:1fr 1fr}}
 .bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.bar-lbl{font-size:12px;color:#888;width:130px;flex-shrink:0;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bar-track{flex:1;background:#f0f0f0;border-radius:4px;height:13px;overflow:hidden}
+.bar-lbl{font-size:12px;color:var(--text3);width:130px;flex-shrink:0;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;background:var(--bg3);border-radius:4px;height:13px;overflow:hidden}
 .bar-fill{height:100%;border-radius:4px}
-.bar-cnt{font-size:12px;color:#888;width:28px;flex-shrink:0}
-.empty{text-align:center;padding:3rem 1rem;color:#bbb;font-size:14px}
+.bar-cnt{font-size:12px;color:var(--text3);width:28px;flex-shrink:0}
+.empty{text-align:center;padding:3rem 1rem;color:var(--text4);font-size:14px}
 .tag-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
 .msg{font-size:12px;margin-top:8px}
 .msg-ok{color:#1D9E75}.msg-err{color:#E24B4A}.msg-info{color:#378ADD}
 .gs-status{font-size:13px;padding:10px 14px;border-radius:10px;margin-top:10px;line-height:1.6}
-.gs-ok{background:#E1F5EE;color:#085041}.gs-err{background:#FCEBEB;color:#791F1F}.gs-info{background:#E6F1FB;color:#0C447C}
-.stbtn{flex:1;padding:9px;border-radius:8px;border:1px solid #d5d5d5;font-size:13px;cursor:pointer;font-family:inherit;background:#fff;color:#888}
-.stbtn:hover{border-color:#888}
-.stbtn.sel-pre{background:#FAEEDA;color:#633806;border-color:#BA7517;font-weight:600}
-.stbtn.sel-rev{background:#E1F5EE;color:#085041;border-color:#1D9E75;font-weight:600}
+.gs-ok{background:#1a2e20;color:#7ecb9a}
+.gs-err{background:#2e1a1a;color:#e87a7a}
+.gs-info{background:#1a2535;color:#7ab8e8}
+.stbtn{flex:1;padding:9px;border-radius:8px;border:1px solid var(--border2);font-size:13px;cursor:pointer;font-family:inherit;background:var(--card-bg);color:var(--text3)}
+.stbtn:hover{border-color:var(--text3)}
+.stbtn.sel-pre{background:#3a2800;color:#f0b840;border-color:#BA7517;font-weight:600}
+.stbtn.sel-rev{background:#0a2a1a;color:#6ecba0;border-color:#1D9E75;font-weight:600}
 .preceptor-row{display:none;margin-top:10px}.preceptor-row.visible{display:block}
-.edit-form{border-top:1px solid #f0f0f0;margin-top:12px;padding-top:12px;display:none}
+.edit-form{border-top:1px solid var(--border);margin-top:12px;padding-top:12px;display:none}
 .edit-form.open{display:block}
-.diff-panel{border-top:1px solid #f0f0f0;margin-top:12px;padding-top:12px;display:none}
+.diff-panel{border-top:1px solid var(--border);margin-top:12px;padding-top:12px;display:none}
 .diff-panel.open{display:block}
 .diff-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px}
 @media(max-width:580px){.diff-cols{grid-template-columns:1fr}}
-.diff-col{background:#fafafa;border:1px solid #e5e5e5;border-radius:8px;padding:12px;min-height:80px}
+.diff-col{background:var(--diff-bg);border:1px solid var(--border);border-radius:8px;padding:12px;min-height:80px}
 .diff-col-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
 .diff-col-title.pre{color:#633806}.diff-col-title.rev{color:#085041}
 .diff-text{font-size:13px;line-height:1.85;white-space:pre-wrap;word-break:break-word}
 .diff-add{background:#d4edda;color:#155724;border-radius:3px;padding:0 2px}
 .diff-del{background:#f8d7da;color:#721c24;text-decoration:line-through;border-radius:3px;padding:0 2px}
-.diff-legend{display:flex;gap:14px;font-size:11px;color:#888;margin-top:10px;flex-wrap:wrap}
+.diff-legend{display:flex;gap:14px;font-size:11px;color:var(--text3);margin-top:10px;flex-wrap:wrap}
 .diff-legend span{display:flex;align-items:center;gap:5px}
 .leg-add{width:12px;height:12px;background:#d4edda;border-radius:3px;display:inline-block;flex-shrink:0}
 .leg-del{width:12px;height:12px;background:#f8d7da;border-radius:3px;display:inline-block;flex-shrink:0}
-.script-box{background:#f5f5f3;border-radius:8px;padding:12px;font-size:11px;font-family:'Courier New',monospace;color:#555;white-space:pre-wrap;line-height:1.7;overflow-x:auto;margin-top:8px}
-.highlight{background:#E1F5EE;border-radius:8px;padding:10px 14px;font-size:12px;color:#085041;line-height:1.7;margin-top:10px}
-.netlify-box{background:#E6F1FB;border-radius:10px;padding:14px 16px;margin-bottom:12px}
-.netlify-box a{color:#0C447C;font-weight:600}
+.script-box{background:var(--script-bg);border-radius:8px;padding:12px;font-size:11px;font-family:'Courier New',monospace;color:var(--text2);white-space:pre-wrap;line-height:1.7;overflow-x:auto;margin-top:8px}
+.highlight{background:#1a2e20;border-radius:8px;padding:10px 14px;font-size:12px;color:#7ecb9a;line-height:1.7;margin-top:10px}
+.netlify-box{background:#1e2a3a;border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.netlify-box a{color:#7ab8e8;font-weight:600}
 .toolbar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
 .action-row{display:flex;gap:6px;align-items:center;flex-shrink:0}
-#login-screen{position:fixed;inset:0;background:#f5f5f3;display:flex;align-items:center;justify-content:center;z-index:999}
+#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:999}
 #login-screen.hidden{display:none}
-.login-box{background:#fff;border:1px solid #e5e5e5;border-radius:16px;padding:40px 36px;width:100%;max-width:360px;text-align:center}
-.login-logo{font-size:22px;font-weight:700;color:#1a1a1a;margin-bottom:4px}
-.login-sub{font-size:13px;color:#888;margin-bottom:28px}
-.login-box input[type=password]{font-size:15px;padding:11px 14px;border-radius:10px;border:1px solid #d5d5d5;width:100%;text-align:center;letter-spacing:.15em;outline:none;margin-bottom:12px}
-.login-box input[type=password]:focus{border-color:#1a1a1a}
+.login-box{background:var(--card-bg);border:1px solid var(--border);border-radius:16px;padding:40px 36px;width:100%;max-width:360px;text-align:center}
+.login-logo{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:28px}
+.login-box input[type=password]{font-size:15px;padding:11px 14px;border-radius:10px;border:1px solid var(--border2);background:var(--input-bg);color:var(--text);width:100%;text-align:center;letter-spacing:.15em;outline:none;margin-bottom:12px}
+.login-box input[type=password]:focus{border-color:var(--text)}
 .login-box button{width:100%;padding:11px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
 .login-box button:hover{opacity:.85}
 .login-err{font-size:12px;color:#A32D2D;margin-top:8px;min-height:16px}
-.login-hint{font-size:11px;color:#bbb;margin-top:16px;line-height:1.6}
+.login-hint{font-size:11px;color:var(--text4);margin-top:16px;line-height:1.6}
 #app-wrapper{display:none}
 #app-wrapper.visible{display:block}
-</style>
+#dark-toggle{position:fixed;top:13px;right:20px;z-index:100;background:var(--card-bg);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:13px;color:var(--text);font-family:inherit;transition:background .2s}
+#dark-toggle:hover{background:var(--bg3)}
 
+.pagination {display:flex;justify-content:center;align-items:center;gap:6px;margin-top:24px;margin-bottom:8px;flex-wrap:wrap}
+.page-btn {background:var(--card-bg);color:var(--text3);border:1px solid var(--border2);border-radius:8px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s}
+.page-btn:hover:not(:disabled) {border-color:var(--text);color:var(--text)}
+.page-btn.active {background:var(--text);color:var(--bg);border-color:var(--text)}
+.page-btn:disabled {opacity:.4;cursor:not-allowed}
+.page-dots {color:var(--text4);font-size:14px;padding:0 4px}
+
+.form-split { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media(min-width: 850px) { 
+  .form-split { grid-template-columns: 1fr 1fr; align-items: start; } 
+  .compact-ta { min-height: 140px !important; } 
+}
+</style>
 </head>
 <body>
 
+<button id="dark-toggle" onclick="toggleDark()" title="Alternar modo noturno">🌙</button>
 <div id="login-screen">
   <div class="login-box">
     <div class="login-logo">Case Log — Radiologia</div>
@@ -130,7 +163,6 @@ textarea{resize:vertical;min-height:64px}
 <div class="topbar">
   <div>
     <div class="topbar-title">Case Log — Radiologia</div>
-    <div class="topbar-sub">Residência médica</div>
   </div>
 </div>
 <div class="container">
@@ -142,123 +174,113 @@ textarea{resize:vertical;min-height:64px}
 </div>
 
 <div id="tab-registrar" class="section active">
-<div class="card">
-  <div class="sect-title" style="margin-top:0">Identificação</div>
-  <div class="grid2" style="margin-bottom:12px">
-    <div class="field"><label>Nome completo</label><input id="f-nome" placeholder="Dr(a). Nome Sobrenome"></div>
-    <div class="field"><label>Ano de residência</label>
-      <select id="f-ano"><option value="">—</option><option>R1</option><option>R2</option><option>R3</option><option>R4</option></select>
+  <div class="form-split">
+    
+    <div class="card" style="margin-bottom: 0;">
+      <div class="sect-title" style="margin-top:0">Dados do exame</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="field"><label>Data do exame</label><input type="date" id="f-data-exame" onchange="calcIdade()"></div>
+        <div class="field"><label>Data do laudo</label><input type="date" id="f-data-laudo"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:12px">
+        <div class="field"><label>Nome</label><input id="f-paciente" placeholder="Opcional"></div>
+        <div class="field"><label>Registro</label><input id="f-regpaciente" placeholder="Nº prontuário"></div>
+        <div class="field"><label>Nascimento</label><input type="date" id="f-dtnasc" onchange="calcIdade()"></div>
+        <div class="field"><label>Idade</label>
+          <input id="f-idade" placeholder="Auto" readonly style="background:var(--bg3);color:var(--text2);cursor:default">
+        </div>
+      </div>
+      <div class="grid2" style="margin-bottom:12px">
+        <div class="field"><label>Modalidade</label>
+          <select id="f-modal" onchange="toggleDoppler()"><option value="">Selecione...</option>
+            <option>Radiografia (RX)</option><option>Tomografia (TC)</option><option>Ressonância Magnética (RM)</option>
+            <option>Ultrassonografia (US)</option><option>Mamografia</option><option>Densitometria óssea (DXA)</option>
+            <option>PET-CT</option><option>Medicina Nuclear / Cintilografia</option>
+            <option>Angiotomografia / AngioRM</option><option>Intervencionista vascular</option>
+            <option>Intervencionista não vascular</option><option>Fluoroscopia / Contrastado</option><option>Outro</option>
+          </select>
+        </div>
+        <div class="field"><label>Área anatômica</label>
+          <select id="f-area"><option value="">Selecione...</option>
+            <option>Neurorradiologia (crânio / SNC)</option><option>Seios da face (seios paranasais)</option>
+            <option>Mastoide / ouvido / osso temporal</option><option>Pescoço (tireoide, laringe, partes moles cervicais)</option>
+            <option>Coluna vertebral</option><option>Tórax</option><option>Cardiovascular</option>
+            <option>KIT (tórax + abdome + pelve)</option><option>Abdome</option><option>Abdome + Pelve</option>
+            <option>Pelve e trato urogenital</option><option>Musculoesquelético</option>
+            <option>Mama</option><option>Ginecológica / obstétrica</option>
+            <option>Pediátrica / neonatal</option><option>Transfontanela</option>
+            <option>Dermatológico</option><option>Outro</option>
+          </select>
+        </div>
+      </div>
+      <div id="doppler-row" style="display:none;margin-bottom:12px">
+        <div class="field">
+          <label>Doppler</label>
+          <select id="f-doppler">
+            <option value="">Sem Doppler</option>
+            <option>Doppler venoso</option><option>Doppler arterial</option>
+            <option>Doppler obstétrico</option><option>Doppler de órgãos</option><option>Outro Doppler</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid2" style="margin-bottom:12px">
+        <div class="field"><label>Tipo de caso</label>
+          <select id="f-tipo"><option value="">Selecione...</option>
+            <option>Eletivo / ambulatorial</option><option>Urgência / emergência</option>
+            <option>UTI / internação</option><option>Centro cirúrgico</option><option>Telelaudo remoto</option>
+          </select>
+        </div>
+        <div class="field"><label>Dificuldade</label>
+          <select id="f-dif"><option value="">Selecione...</option>
+            <option>Rotineiro</option><option>Moderado</option><option>Complexo</option><option>Raro / excepcional</option>
+          </select>
+        </div>
+      </div>
     </div>
-  </div>
-  <div class="sect-title">Dados do exame</div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px">
-    <div class="field"><label>Data do exame</label><input type="date" id="f-data-exame" onchange="calcIdade()"></div>
-    <div class="field"><label>Data do laudo</label><input type="date" id="f-data-laudo"></div>
-    <div class="field"><label>Hospital / serviço</label><input id="f-local" placeholder="Ex: HC-UFPR"></div>
-  </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:12px">
-    <div class="field"><label>Nome do paciente</label><input id="f-paciente" placeholder="Opcional"></div>
-    <div class="field"><label>Registro do paciente</label><input id="f-regpaciente" placeholder="Nº de registro / prontuário"></div>
-    <div class="field"><label>Data de nascimento</label><input type="date" id="f-dtnasc" onchange="calcIdade()"></div>
-    <div class="field"><label>Idade no exame</label>
-      <input id="f-idade" placeholder="Calculada automaticamente" readonly
-        style="background:#f5f5f3;color:#555;cursor:default">
+
+    <div class="card" style="margin-bottom: 0;">
+      <div class="sect-title" style="margin-top:0">Textos dos laudos</div>
+      <div class="field" style="margin-bottom:12px">
+        <div style="display:flex;gap:8px">
+          <button class="stbtn" id="btn-pre" onclick="setStatus('pre-laudo','')" style="padding:6px; font-size:12px">Pré-laudo</button>
+          <button class="stbtn" id="btn-rev" onclick="setStatus('revisado','')" style="padding:6px; font-size:12px">Revisado</button>
+        </div>
+      </div>
+      <div class="preceptor-row" id="preceptor-row" style="margin-bottom:12px">
+        <div class="field"><label>Nome do preceptor revisor</label>
+          <input id="f-preceptor" placeholder="Dr(a). Nome">
+        </div>
+      </div>
+      
+      <div class="grid2" style="margin-bottom:12px">
+        <div class="field">
+          <label>Pré-laudo</label>
+          <textarea id="f-prelaudo-txt" class="compact-ta" placeholder="Seu texto..."></textarea>
+        </div>
+        <div class="field">
+          <label>Laudo revisado</label>
+          <textarea id="f-laudorev-txt" class="compact-ta" placeholder="Texto final..."></textarea>
+        </div>
+      </div>
+
+      <div class="sect-title">Diagnóstico e notas</div>
+      <div class="field" style="margin-bottom:12px">
+        <label>Diagnóstico principal</label>
+        <input id="f-diag" placeholder="Ex: Tromboembolismo pulmonar...">
+      </div>
+      <div class="field" style="margin-bottom:12px">
+        <label>Notas / aprendizado</label>
+        <textarea id="f-nota" placeholder="Feedback, aspectos técnicos..." style="min-height:50px"></textarea>
+      </div>
+      
+      <div class="btn-row" style="margin-top:auto;">
+        <span id="form-msg" class="msg" style="display:none; margin-right:auto; margin-top:0;"></span>
+        <button class="btn btn-outline" onclick="clearForm()">Limpar</button>
+        <button class="btn btn-primary" onclick="saveCase()">Salvar caso</button>
+      </div>
     </div>
+
   </div>
-  <div class="grid2" style="margin-bottom:12px">
-    <div class="field"><label>Modalidade</label>
-      <select id="f-modal" onchange="toggleDoppler()"><option value="">Selecione...</option>
-        <option>Radiografia (RX)</option><option>Tomografia (TC)</option><option>Ressonância Magnética (RM)</option>
-        <option>Ultrassonografia (US)</option><option>Mamografia</option><option>Densitometria óssea (DXA)</option>
-        <option>PET-CT</option><option>Medicina Nuclear / Cintilografia</option>
-        <option>Angiotomografia / AngioRM</option><option>Intervencionista vascular</option>
-        <option>Intervencionista não vascular</option><option>Fluoroscopia / Contrastado</option><option>Outro</option>
-      </select>
-    </div>
-    <div class="field"><label>Área anatômica</label>
-      <select id="f-area"><option value="">Selecione...</option>
-        <option>Neurorradiologia (crânio / SNC)</option><option>Seios da face (seios paranasais)</option>
-        <option>Mastoide / ouvido / osso temporal</option><option>Pescoço (tireoide, laringe, partes moles cervicais)</option>
-        <option>Coluna vertebral</option><option>Tórax</option><option>Cardiovascular</option>
-        <option>KIT (tórax + abdome + pelve)</option><option>Abdome</option><option>Abdome + Pelve</option>
-        <option>Pelve e trato urogenital</option><option>Musculoesquelético</option>
-        <option>Mama</option><option>Ginecológica / obstétrica</option>
-        <option>Pediátrica / neonatal</option><option>Transfontanela</option>
-        <option>Dermatológico</option><option>Outro</option>
-      </select>
-    </div>
-  </div>
-  <div id="doppler-row" style="display:none;margin-bottom:12px">
-    <div class="field">
-      <label>Doppler</label>
-      <select id="f-doppler">
-        <option value="">Sem Doppler</option>
-        <option>Doppler venoso</option>
-        <option>Doppler arterial</option>
-        <option>Doppler obstétrico</option>
-        <option>Doppler de órgãos</option>
-        <option>Outro Doppler</option>
-      </select>
-    </div>
-  </div>
-  <div class="grid3" style="margin-bottom:12px">
-    <div class="field"><label>Nível de participação</label>
-      <select id="f-nivel"><option value="">Selecione...</option>
-        <option>Observador</option><option>Executante (supervisionado)</option>
-        <option>Executante (independente)</option><option>Supervisor / ensino</option>
-      </select>
-    </div>
-    <div class="field"><label>Tipo de caso</label>
-      <select id="f-tipo"><option value="">Selecione...</option>
-        <option>Eletivo / ambulatorial</option><option>Urgência / emergência</option>
-        <option>UTI / internação</option><option>Centro cirúrgico</option><option>Telelaudo remoto</option>
-      </select>
-    </div>
-    <div class="field"><label>Dificuldade</label>
-      <select id="f-dif"><option value="">Selecione...</option>
-        <option>Rotineiro</option><option>Moderado</option><option>Complexo</option><option>Raro / excepcional</option>
-      </select>
-    </div>
-  </div>
-  <div class="sect-title">Status do laudo</div>
-  <div class="field" style="margin-bottom:12px">
-    <label>Situação do laudo</label>
-    <div style="display:flex;gap:8px;margin-top:4px">
-      <button class="stbtn" id="btn-pre" onclick="setStatus('pre-laudo','')">Pré-laudo liberado</button>
-      <button class="stbtn" id="btn-rev" onclick="setStatus('revisado','')">Revisado pelo preceptor</button>
-    </div>
-  </div>
-  <div class="preceptor-row" id="preceptor-row">
-    <div class="field" style="margin-bottom:12px"><label>Nome do preceptor revisor</label>
-      <input id="f-preceptor" placeholder="Dr(a). Nome do Preceptor">
-    </div>
-  </div>
-  <div class="sect-title">Textos dos laudos (para comparação)</div>
-  <div class="grid2" style="margin-bottom:12px">
-    <div class="field">
-      <label>Pré-laudo — seu texto</label>
-      <textarea id="f-prelaudo-txt" placeholder="Cole aqui o texto do seu pré-laudo..." style="min-height:110px"></textarea>
-    </div>
-    <div class="field">
-      <label>Laudo revisado — texto do preceptor</label>
-      <textarea id="f-laudorev-txt" placeholder="Cole aqui o laudo após revisão do preceptor..." style="min-height:110px"></textarea>
-    </div>
-  </div>
-  <div class="sect-title">Diagnóstico e notas</div>
-  <div class="field" style="margin-bottom:12px">
-    <label>Diagnóstico principal / achado relevante</label>
-    <input id="f-diag" placeholder="Ex: Tromboembolismo pulmonar bilateral...">
-  </div>
-  <div class="field" style="margin-bottom:4px">
-    <label>Notas / aprendizado (opcional)</label>
-    <textarea id="f-nota" placeholder="Aspectos técnicos, feedback do preceptor, pontos de aprendizado..."></textarea>
-  </div>
-  <div class="btn-row">
-    <button class="btn btn-outline" onclick="clearForm()">Limpar</button>
-    <button class="btn btn-primary" onclick="saveCase()">Salvar caso</button>
-  </div>
-  <div id="form-msg" class="msg" style="display:none"></div>
-</div>
 </div>
 
 <div id="tab-casos" class="section">
@@ -293,19 +315,27 @@ textarea{resize:vertical;min-height:64px}
       </div>
     </div>
     <div class="filter-grid2">
-      <div class="field"><label>Nome do paciente</label><input id="ff-paciente" placeholder="Buscar..." oninput="renderCases()"></div>
+      <div class="field"><label>Nome do paciente</label><input id="ff-paciente" placeholder="Buscar..." oninput="renderCasesDebounced()"></div>
       <div class="field"><label>Data do exame</label><input type="date" id="ff-data-exame" onchange="renderCases()"></div>
       <div class="field"><label>Data do laudo</label><input type="date" id="ff-data-laudo" onchange="renderCases()"></div>
-      <div class="field"><label>Preceptor revisor</label><input id="ff-preceptor" placeholder="Nome..." oninput="renderCases()"></div>
+      <div class="field"><label>Preceptor revisor</label><input id="ff-preceptor" placeholder="Nome..." oninput="renderCasesDebounced()"></div>
     </div>
     <div style="margin-top:8px">
       <div class="field">
         <label>Buscar no texto dos laudos</label>
-        <input id="ff-laudo" placeholder="Palavra ou trecho — busca no pré-laudo e laudo revisado..." oninput="renderCases()" style="background:#fff">
+        <input id="ff-laudo" placeholder="Palavra ou trecho..." oninput="renderCasesDebounced()" style="background:var(--input-bg)">
       </div>
     </div>
-    <div style="display:flex;justify-content:flex-end;margin-top:8px">
-      <button class="btn btn-outline" style="font-size:12px;padding:5px 12px" onclick="clearFilters()">Limpar filtros</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;flex-wrap:wrap;gap:8px">
+      <div class="field" style="flex:1;min-width:160px">
+        <label>Ordenar por</label>
+        <select id="ff-sort" onchange="renderCases()" style="font-size:12px">
+          <option value="recente">Mais recente primeiro</option>
+          <option value="antiga">Mais antiga primeiro</option>
+          <option value="diag">Diagnóstico (A→Z)</option>
+        </select>
+      </div>
+      <button class="btn btn-outline" style="font-size:12px;padding:5px 12px;align-self:flex-end" onclick="clearFilters()">Limpar filtros</button>
     </div>
   </div>
   <div class="toolbar">
@@ -315,7 +345,7 @@ textarea{resize:vertical;min-height:64px}
       <input type="file" id="import-file" accept=".csv,.xlsx,.xls" style="display:none" onchange="importFile(this)">
     </label>
     <button class="btn btn-warn" onclick="syncSend()" id="btn-sync-send">Enviar para Sheets</button>
-    <button class="btn btn-info" onclick="syncReceive()" id="btn-sync-receive" style="background:#185FA5;color:#fff;border:none">Receber do Sheets</button>
+    <button class="btn btn-info" onclick="syncReceive()" id="btn-sync-receive">Receber do Sheets</button>
   </div>
   <div id="sync-status" style="display:none" class="gs-status"></div>
   <div id="cases-list"></div>
@@ -331,12 +361,11 @@ textarea{resize:vertical;min-height:64px}
 
 <div id="tab-config" class="section">
   <div class="netlify-box">
-    <p style="font-size:13px;font-weight:600;color:#0C447C;margin-bottom:8px">Hospedar online com Netlify Drop — grátis e sem cadastro</p>
-    <ol style="font-size:12px;color:#185FA5;padding-left:1.2rem;line-height:2.1">
+    <p style="font-size:13px;font-weight:600;color:#7ab8e8;margin-bottom:8px">Hospedar online com Netlify Drop</p>
+    <ol style="font-size:12px;color:#7ab8e8;padding-left:1.2rem;line-height:2.1">
       <li>Acesse <a href="https://app.netlify.com/drop" target="_blank">app.netlify.com/drop</a></li>
       <li>Arraste e solte o arquivo <strong>case_log_radiologia.html</strong> na área indicada</li>
-      <li>Em segundos você recebe uma URL — ex: <strong>meu-caselog.netlify.app</strong></li>
-      <li>Abra essa URL em qualquer dispositivo: celular, tablet, outro computador</li>
+      <li>Abra a URL gerada em qualquer dispositivo.</li>
     </ol>
   </div>
 
@@ -355,20 +384,68 @@ textarea{resize:vertical;min-height:64px}
   </div>
 
   <div class="card">
-    <div class="sect-title" style="margin-top:0">Perfil padrão</div>
-    <div class="grid2" style="margin-bottom:12px">
-      <div class="field"><label>Nome padrão</label><input id="cfg-nome" placeholder="Dr(a). Nome"></div>
-      <div class="field"><label>Ano</label>
-        <select id="cfg-ano"><option value="">—</option><option>R1</option><option>R2</option><option>R3</option><option>R4</option></select>
-      </div>
-    </div>
-    <button class="btn btn-primary" onclick="saveProfile()">Salvar perfil</button>
-    <span id="cfg-msg" class="msg" style="display:inline-block;margin-left:10px"></span>
-  </div>
-
-  <div class="card">
     <div class="sect-title" style="margin-top:0">Sincronização Google Sheets</div>
-    <p style="font-size:12px;color:#888;margin-bottom:10px">O código do Apps Script (doPost e doGet) já está configurado na sua planilha.</p>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:8px">Script de 18 colunas (atualizado com leitura/escrita ilimitada via POST). Copie, cole no Apps Script e publique uma Nova Versão.</p>
+    <div class="script-box" id="script-box" style="max-height:220px;overflow-y:auto">function doGet(e) {
+  var callback = e.parameter.callback;
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return ContentService.createTextOutput(callback+'('+JSON.stringify({ok:true,cases:[]})+')').setMimeType(ContentService.MimeType.JAVASCRIPT);
+    
+    var rows = sheet.getRange(2,1,lastRow-1,18).getValues();
+    var cases = rows.filter(function(r){return r[0];}).map(function(r){
+      return {
+        id:r[0], dataExame:r[1]?Utilities.formatDate(new Date(r[1]),'UTC','yyyy-MM-dd'):'',
+        dataLaudo:r[2]?Utilities.formatDate(new Date(r[2]),'UTC','yyyy-MM-dd'):'',
+        paciente:r[3],regpaciente:r[4],
+        dtnasc:r[5]?Utilities.formatDate(new Date(r[5]),'UTC','yyyy-MM-dd'):'',
+        idade:r[6],modal:r[7],doppler:r[8],area:r[9],tipo:r[10],dif:r[11],
+        statusLaudo:r[12]==='Pré-laudo liberado'?'pre-laudo':r[12]==='Revisado pelo preceptor'?'revisado':'',
+        preceptor:r[13],diag:r[14],nota:r[15],prelaudoTxt:r[16],laudoRevTxt:r[17]
+      };
+    });
+    return ContentService.createTextOutput(callback+'('+JSON.stringify({ok:true,cases:cases})+')').setMimeType(ContentService.MimeType.JAVASCRIPT);
+  } catch(err) {
+    return ContentService.createTextOutput(callback+'('+JSON.stringify({ok:false,error:err.message})+')').setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+}
+
+function doPost(e) {
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    if (!e || !e.postData || !e.postData.contents) throw new Error("Sem dados");
+    var data = JSON.parse(e.postData.contents);
+    var cases = Array.isArray(data) ? data : [data];
+    var added = 0;
+    
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow(["ID", "Data Exame", "Data Laudo", "Paciente", "Registro Paciente", 
+        "Data Nascimento", "Idade no Exame", "Modalidade", "Doppler", "Área", 
+        "Tipo", "Dificuldade", "Status Laudo", "Preceptor", "Diagnóstico", "Notas", 
+        "Pré-laudo", "Laudo Revisado"]);
+    }
+    
+    var lastRow = sheet.getLastRow();
+    var existingIds = lastRow > 1 ? sheet.getRange(2, 1, lastRow - 1, 1).getValues().map(function(r) { return String(r[0]); }) : [];
+
+    cases.forEach(function(c) {
+      if (existingIds.indexOf(String(c.id)) !== -1) return; 
+      var sl = c.statusLaudo === 'pre-laudo' ? 'Pré-laudo liberado' : c.statusLaudo === 'revisado' ? 'Revisado pelo preceptor' : '';
+      sheet.appendRow([c.id, c.dataExame, c.dataLaudo, c.paciente || '', c.regpaciente || '', c.dtnasc || '', c.idade || '',
+        c.modal, c.doppler || '', c.area, c.tipo, c.dif, sl, c.preceptor, c.diag, c.nota, c.prelaudoTxt || '', c.laudoRevTxt || '']);
+      added++;
+    });
+    
+    return ContentService.createTextOutput(JSON.stringify({ok: true, count: added})).setMimeType(ContentService.MimeType.JSON);
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({ok: false, error: err.message})).setMimeType(ContentService.MimeType.JSON);
+  }
+}</div>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+      <button class="btn btn-outline" style="font-size:12px" onclick="copyScript()">Copiar script</button>
+      <span id="copy-msg" class="msg msg-ok" style="display:none">Copiado!</span>
+    </div>
   </div>
 
   <div class="card">
@@ -383,6 +460,23 @@ textarea{resize:vertical;min-height:64px}
 const _sk='radio_auth_v2';
 const WORKER_KEY='radio_worker_url';
 const WORKER_DEFAULT='https://caselog-auth.israelkitzberger.workers.dev';
+const STORE='radio_caselog_v6';
+const URL_FIXA_DO_GOOGLE = "https://script.google.com/macros/s/AKfycbwkXy7lDa4oC_Gh3NQvvtmOW9zByjvN2G_b4aw3cvH2kfvdFerHeJ4tVYOop2XzslYS/exec";
+
+let cases = [];
+let newStatus = '';
+
+const MCOL={'Radiografia (RX)':'b-blue','Tomografia (TC)':'b-teal','Ressonância Magnética (RM)':'b-amber',
+'Ultrassonografia (US)':'b-green','Mamografia':'b-coral','PET-CT':'b-purple',
+'Medicina Nuclear / Cintilografia':'b-purple','Angiotomografia / AngioRM':'b-teal',
+'Intervencionista vascular':'b-coral','Intervencionista não vascular':'b-coral',
+'Fluoroscopia / Contrastado':'b-amber'};
+const BCOL={'Radiografia (RX)':'#378ADD','Tomografia (TC)':'#1D9E75','Ressonância Magnética (RM)':'#BA7517',
+'Ultrassonografia (US)':'#639922','Mamografia':'#D85A30','PET-CT':'#534AB7',
+'Medicina Nuclear / Cintilografia':'#7F77DD','Angiotomografia / AngioRM':'#5DCAA5',
+'Intervencionista vascular':'#D4537E','Intervencionista não vascular':'#D85A30',
+'Fluoroscopia / Contrastado':'#EF9F27','Outro':'#888',
+'Pré-laudo liberado':'#BA7517','Revisado':'#1D9E75'};
 
 async function doLogin(){
   const val=document.getElementById('login-input').value.trim();
@@ -391,7 +485,6 @@ async function doLogin(){
   if(!val){err.textContent='Digite a senha.';return;}
 
   const workerUrl=localStorage.getItem(WORKER_KEY)||WORKER_DEFAULT;
-
   if(!workerUrl){
     err.style.color='#A32D2D';
     err.textContent='Worker não configurado. Acesse a aba Configurar.';
@@ -441,7 +534,6 @@ function checkAuth(){
   return false;
 }
 
-// Inicialização com LocalForage (IndexedDB)
 function loadCasesAndInit() {
   localforage.getItem(STORE).then(function(val) {
     if(val) cases = val;
@@ -454,26 +546,6 @@ function loadCasesAndInit() {
   });
 }
 
-const STORE='radio_caselog_v6';
-const PROF='radio_prof_v6';
-const URL_FIXA_DO_GOOGLE = "https://script.google.com/macros/s/AKfycbwkXy7lDa4oC_Gh3NQvvtmOW9zByjvN2G_b4aw3cvH2kfvdFerHeJ4tVYOop2XzslYS/exec";
-
-// A array 'cases' agora começa vazia e é preenchida pelo IndexedDB
-let cases = [];
-let newStatus = '';
-
-const MCOL={'Radiografia (RX)':'b-blue','Tomografia (TC)':'b-teal','Ressonância Magnética (RM)':'b-amber',
-'Ultrassonografia (US)':'b-green','Mamografia':'b-coral','PET-CT':'b-purple',
-'Medicina Nuclear / Cintilografia':'b-purple','Angiotomografia / AngioRM':'b-teal',
-'Intervencionista vascular':'b-coral','Intervencionista não vascular':'b-coral',
-'Fluoroscopia / Contrastado':'b-amber'};
-const BCOL={'Radiografia (RX)':'#378ADD','Tomografia (TC)':'#1D9E75','Ressonância Magnética (RM)':'#BA7517',
-'Ultrassonografia (US)':'#639922','Mamografia':'#D85A30','PET-CT':'#534AB7',
-'Medicina Nuclear / Cintilografia':'#7F77DD','Angiotomografia / AngioRM':'#5DCAA5',
-'Intervencionista vascular':'#D4537E','Intervencionista não vascular':'#D85A30',
-'Fluoroscopia / Contrastado':'#EF9F27','Outro':'#888',
-'Pré-laudo liberado':'#BA7517','Revisado':'#1D9E75'};
-
 function showTab(t){
   ['registrar','casos','painel','config'].forEach((n,i)=>{
     document.querySelectorAll('.tab')[i].classList.toggle('active',n===t);
@@ -482,7 +554,7 @@ function showTab(t){
   document.getElementById('tab-'+t).classList.add('active');
   if(t==='casos')renderCases();
   if(t==='painel')renderPanel();
-  if(t==='config')loadConfig();
+  if(t==='config')document.getElementById('cfg-workerurl').value=localStorage.getItem(WORKER_KEY)||'';
 }
 
 function setStatus(s,prefix){
@@ -496,7 +568,6 @@ function setStatus(s,prefix){
   if(s!=='revisado'){const p=document.getElementById(prefix+'f-preceptor');if(p)p.value='';}
 }
 
-// Nova função de persistência que usa IndexedDB sem limite de tamanho
 function persist(){
   localforage.setItem(STORE, cases).catch(err => console.error("Erro ao salvar no IndexedDB:", err));
 }
@@ -504,11 +575,6 @@ function persist(){
 function flash(id,txt,cls){const e=document.getElementById(id);if(!e)return;e.textContent=txt;e.className='msg '+cls;e.style.display='inline-block';setTimeout(()=>e.style.display='none',2500);}
 function showMsg(id,txt,cls){const e=document.getElementById(id);if(!e)return;e.textContent=txt;e.className='msg '+cls;e.style.display='block';setTimeout(()=>e.style.display='none',3500);}
 
-function loadProfile(){
-  const p=JSON.parse(localStorage.getItem(PROF)||'{}');
-  if(p.nome)document.getElementById('f-nome').value=p.nome;
-  if(p.ano)document.getElementById('f-ano').value=p.ano;
-}
 function saveWorkerConfig(){
   const url=document.getElementById('cfg-workerurl').value.trim();
   localStorage.setItem(WORKER_KEY,url);
@@ -538,17 +604,6 @@ async function testWorker(){
   }
   res.style.display='block';
   btn.textContent='Testar conexão';btn.disabled=false;
-}
-
-function saveProfile(){
-  localStorage.setItem(PROF,JSON.stringify({nome:document.getElementById('cfg-nome').value,ano:document.getElementById('cfg-ano').value}));
-  flash('cfg-msg','Perfil salvo.','msg-ok');
-}
-function loadConfig(){
-  const p=JSON.parse(localStorage.getItem(PROF)||'{}');
-  if(p.nome)document.getElementById('cfg-nome').value=p.nome;
-  if(p.ano)document.getElementById('cfg-ano').value=p.ano;
-  document.getElementById('cfg-workerurl').value=localStorage.getItem(WORKER_KEY)||'';
 }
 
 function toggleDoppler(){
@@ -605,19 +660,16 @@ function saveCase(){
   const preceptor=document.getElementById('f-preceptor').value.trim();
   if(!dataExame||!modal||!area||!diag){showMsg('form-msg','Preencha: data do exame, modalidade, área e diagnóstico.','msg-err');return;}
   if(newStatus==='revisado'&&!preceptor){showMsg('form-msg','Informe o nome do preceptor revisor.','msg-err');return;}
+  
   cases.unshift({
     id:Date.now(),
-    nome:document.getElementById('f-nome').value.trim(),
-    anoRes:document.getElementById('f-ano').value,
     dataExame,dataLaudo:document.getElementById('f-data-laudo').value,
-    local:document.getElementById('f-local').value.trim(),
     paciente:document.getElementById('f-paciente').value.trim(),
     regpaciente:document.getElementById('f-regpaciente').value.trim(),
     dtnasc:document.getElementById('f-dtnasc').value,
     idade:document.getElementById('f-idade').value,
     modal,area,
     doppler:document.getElementById('f-doppler').value,
-    nivel:document.getElementById('f-nivel').value,
     tipo:document.getElementById('f-tipo').value,
     dif:document.getElementById('f-dif').value,
     statusLaudo:newStatus,preceptor,diag,
@@ -626,26 +678,28 @@ function saveCase(){
     laudoRevTxt:document.getElementById('f-laudorev-txt').value.trim()
   });
   persist();showMsg('form-msg','Caso registrado com sucesso.','msg-ok');
-  clearFormFields();loadProfile();
+  clearFormFields();
 }
 
 function clearFormFields(){
-  ['f-nome','f-ano','f-data-exame','f-data-laudo','f-local','f-paciente','f-regpaciente','f-dtnasc','f-idade','f-doppler',
-   'f-modal','f-area','f-nivel','f-tipo','f-dif','f-diag','f-nota','f-preceptor',
+  ['f-data-exame','f-data-laudo','f-paciente','f-regpaciente','f-dtnasc','f-idade','f-doppler',
+   'f-modal','f-area','f-tipo','f-dif','f-diag','f-nota','f-preceptor',
    'f-prelaudo-txt','f-laudorev-txt']
   .forEach(id=>{const e=document.getElementById(id);if(e)e.tagName==='SELECT'?e.value='':e.value='';});
   setStatus('','');newStatus='';
   document.getElementById('doppler-row').style.display='none';
 }
-function clearForm(){clearFormFields();loadProfile();}
+function clearForm(){clearFormFields();}
+
 function clearFilters(){
-  ['ff-modal','ff-area','ff-status','ff-paciente','ff-data-exame','ff-data-laudo','ff-preceptor','ff-laudo']
+  ['ff-modal','ff-area','ff-status','ff-paciente','ff-data-exame','ff-data-laudo','ff-preceptor','ff-laudo','ff-sort']
   .forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   renderCases();
 }
+
 function deleteCase(id){
   if(!confirm('Remover este caso?'))return;
-  cases=cases.filter(c=>c.id!==id);persist();renderCases();
+  cases=cases.filter(c=>c.id!==id);persist();renderCases(true);
 }
 
 function diffWords(a,b){
@@ -687,7 +741,7 @@ function toggleDiff(id){
     if(!c)return;
     const pre=c.prelaudoTxt||'';
     const rev=c.laudoRevTxt||'';
-    if(!pre&&!rev){panel.innerHTML='<p style="font-size:13px;color:#aaa;padding:6px 0">Nenhum texto de laudo registrado.</p>';return;}
+    if(!pre&&!rev){panel.innerHTML='<p style="font-size:13px;color:var(--text4);padding:6px 0">Nenhum texto de laudo registrado.</p>';return;}
     const diff=diffWords(pre,rev);
     panel.innerHTML=`
       <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
@@ -700,11 +754,11 @@ function toggleDiff(id){
       <div class="diff-cols">
         <div class="diff-col">
           <div class="diff-col-title pre">Pré-laudo — seu texto</div>
-          <div class="diff-text">${diff.left||'<span style="color:#bbb;font-style:italic">Sem texto</span>'}</div>
+          <div class="diff-text">${diff.left||'<span style="color:var(--text4);font-style:italic">Sem texto</span>'}</div>
         </div>
         <div class="diff-col">
           <div class="diff-col-title rev">Laudo revisado — preceptor</div>
-          <div class="diff-text">${diff.right||'<span style="color:#bbb;font-style:italic">Sem texto</span>'}</div>
+          <div class="diff-text">${diff.right||'<span style="color:var(--text4);font-style:italic">Sem texto</span>'}</div>
         </div>
       </div>`;
   }
@@ -725,10 +779,10 @@ function populateEditForm(id){
   const c=cases.find(x=>x.id===id);if(!c)return;
   const p='e'+id+'-';
   const set=(s,v)=>{const e=document.getElementById(p+s);if(e)e.value=v||'';};
-  set('dataExame',c.dataExame);set('dataLaudo',c.dataLaudo);set('local',c.local);
+  set('dataExame',c.dataExame);set('dataLaudo',c.dataLaudo);
   set('paciente',c.paciente);set('regpaciente',c.regpaciente);set('dtnasc',c.dtnasc);set('modal',c.modal);set('area',c.area);
   setTimeout(()=>{calcIdadeEdit(p);const dp=document.getElementById(p+'doppler');if(dp)dp.value=c.doppler||'';},50);
-  set('nivel',c.nivel);set('tipo',c.tipo);set('dif',c.dif);
+  set('tipo',c.tipo);set('dif',c.dif);
   set('diag',c.diag);set('nota',c.nota);set('f-preceptor',c.preceptor);
   set('prelaudo',c.prelaudoTxt);set('laudorev',c.laudoRevTxt);
   setStatus(c.statusLaudo||'',p);
@@ -748,29 +802,65 @@ function saveEdit(id){
   
   cases[idx]={...cases[idx],
     dataExame:getV('dataExame'),dataLaudo:getV('dataLaudo'),
-    local:get('local'),paciente:get('paciente'),regpaciente:get('regpaciente'),
+    paciente:get('paciente'),regpaciente:get('regpaciente'),
     dtnasc:getV('dtnasc'),idade:calcIdadeStr(getV('dtnasc'),getV('dataExame')),
-    modal:getV('modal'),area:getV('area'),nivel:getV('nivel'),
+    modal:getV('modal'),area:getV('area'),
     doppler:getV('doppler'),
     tipo:getV('tipo'),dif:getV('dif'),statusLaudo:sl,preceptor,
     diag:get('diag'),nota:get('nota'),
     prelaudoTxt:get('prelaudo'),
-    laudoRevTxt:get('laudorev') // <-- ERRO CORRIGIDO AQUI (R maiúsculo)
+    laudoRevTxt:get('laudorev') 
   };
   
   persist();
-  renderCases();
+  renderCases(true);
 }
 
 function selOpts(sel,opts){return opts.map(o=>`<option${sel===o?' selected':''}>${o}</option>`).join('');}
 
 function highlight(text, term){
-  if(!term||!text)return text||'';
+if(!term||!text)return text||'';
   const esc=term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-  return text.replace(new RegExp('('+esc+')','gi'),'<mark style="background:#fff3cd;color:#7d4e00;border-radius:2px;padding:0 1px">$1</mark>');
+  return text.replace(new RegExp('('+esc+')','gi'),'<mark style="background:#1a2e20;color:#7ecb9a;border-radius:2px;padding:0 1px">$1</mark>');
 }
 
-function renderCases(){
+let debounceTimer;
+let currentPage = 1;
+const ITEMS_PER_PAGE = 50;
+
+function renderCasesDebounced() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    renderCases(false);
+  }, 300);
+}
+
+function changePage(p) {
+  currentPage = p;
+  renderCases(true);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function getPaginationHTML(current, total) {
+  if (total <= 1) return '';
+  let html = '<div class="pagination">';
+  html += `<button class="page-btn" ${current === 1 ? 'disabled' : ''} onclick="changePage(${current - 1})">❮</button>`;
+  let last = 0;
+  for (let i = 1; i <= total; i++) {
+    if (i === 1 || i === total || (i >= current - 1 && i <= current + 1)) {
+      if (last && i - last > 1) html += `<span class="page-dots">...</span>`;
+      html += `<button class="page-btn ${i === current ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+      last = i;
+    }
+  }
+  html += `<button class="page-btn" ${current === total ? 'disabled' : ''} onclick="changePage(${current + 1})">❯</button>`;
+  html += '</div>';
+  return html;
+}
+
+function renderCases(keepPage = false) {
+  if(!keepPage) currentPage = 1;
+  
   const fM=document.getElementById('ff-modal').value;
   const fA=document.getElementById('ff-area').value;
   const fS=document.getElementById('ff-status').value;
@@ -779,7 +869,9 @@ function renderCases(){
   const fDL=document.getElementById('ff-data-laudo').value;
   const fPR=(document.getElementById('ff-preceptor').value||'').toLowerCase();
   const fLaudo=(document.getElementById('ff-laudo').value||'').toLowerCase();
-  const filtered=cases.filter(c=>{
+  const fSort=(document.getElementById('ff-sort')||{value:'recente'}).value;
+  
+  let filtered=cases.filter(c=>{
     if(fM&&c.modal!==fM)return false;
     if(fA&&c.area!==fA)return false;
     if(fS&&c.statusLaudo!==fS)return false;
@@ -793,10 +885,23 @@ function renderCases(){
     }
     return true;
   });
+  
+  if(fSort==='antiga') filtered.sort((a,b)=>(a.dataExame||'').localeCompare(b.dataExame||''));
+  else if(fSort==='diag') filtered.sort((a,b)=>(a.diag||'').localeCompare(b.diag||''));
+  else filtered.sort((a,b)=>(b.dataExame||'').localeCompare(a.dataExame||''));
+  
   const el=document.getElementById('cases-list');
   if(!filtered.length){el.innerHTML='<div class="empty">Nenhum caso encontrado.</div>';return;}
-  el.innerHTML=`<div style="font-size:12px;color:#888;margin-bottom:10px">${filtered.length} caso(s) encontrado(s)</div>`+
-  filtered.map(c=>{
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+  if (currentPage > totalPages) currentPage = totalPages || 1;
+  
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginated = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  let html = `<div style="font-size:12px;color:var(--text3);margin-bottom:10px;font-weight:500">Página ${currentPage} de ${totalPages} — a mostrar ${paginated.length} de ${filtered.length} caso(s) encontrados</div>`;
+  
+  html += paginated.map(c=>{
     const p='e'+c.id+'-';
     const hasDiff=c.prelaudoTxt||c.laudoRevTxt;
     const stB=c.statusLaudo==='pre-laudo'?'<span class="badge st-pre">Pré-laudo</span>':
@@ -808,9 +913,9 @@ function renderCases(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div style="flex:1;min-width:0">
           <div style="font-size:14px;font-weight:600">${highlight(c.diag||'—',fLaudo)}</div>
-          <div style="font-size:12px;color:#888;margin-top:3px;line-height:1.6">
-            ${c.dataExame||''}${c.dataLaudo?' → laudo: '+c.dataLaudo:''}${c.paciente?' · '+c.paciente:''}${c.regpaciente?' (reg. '+c.regpaciente+')':''}${c.idade?' · '+c.idade:''}${c.local?' · '+c.local:''}${c.nome?' · '+c.nome:''}
-            ${c.statusLaudo==='revisado'&&c.preceptor?' · <strong style="color:#1a1a1a">'+c.preceptor+'</strong>':''}
+          <div style="font-size:12px;color:var(--text3);margin-top:3px;line-height:1.6">
+            ${c.dataExame||''}${c.dataLaudo?' → laudo: '+c.dataLaudo:''}${c.paciente?' · <span style="color:var(--text); font-weight:500">'+c.paciente+'</span>':''}${c.regpaciente?' (reg. '+c.regpaciente+')':''}${c.idade?' · '+c.idade:''}
+            ${c.statusLaudo==='revisado'&&c.preceptor?' · <strong style="color:var(--text)">'+c.preceptor+'</strong>':''}
           </div>
         </div>
         <div class="action-row">
@@ -824,27 +929,24 @@ function renderCases(){
         <span class="badge ${MCOL[c.modal]||'b-blue'}">${c.modal||'—'}</span>
         ${c.doppler?`<span class="badge b-teal">${c.doppler}</span>`:''}
         <span class="badge b-gray">${c.area||'—'}</span>
-        ${c.nivel?`<span class="badge b-gray">${c.nivel}</span>`:''}
-        ${c.anoRes?`<span class="badge b-purple">${c.anoRes}</span>`:''}
         ${c.dif&&c.dif!=='Rotineiro'?`<span class="badge b-coral">${c.dif}</span>`:''}
       </div>
-      ${c.nota?`<div style="font-size:12px;color:#888;margin-top:8px;border-top:1px solid #f0f0f0;padding-top:8px">${highlight(c.nota,fLaudo)}</div>`:''}
-      ${laudoMatch&&(preHL||revHL)?`<div style="margin-top:8px;border-top:1px solid #f0f0f0;padding-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        ${preHL?`<div><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#633806;margin-bottom:4px">Pré-laudo</div><div style="font-size:12px;color:#555;line-height:1.7;white-space:pre-wrap;max-height:80px;overflow:hidden">${preHL}</div></div>`:''}
-        ${revHL?`<div><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#085041;margin-bottom:4px">Laudo revisado</div><div style="font-size:12px;color:#555;line-height:1.7;white-space:pre-wrap;max-height:80px;overflow:hidden">${revHL}</div></div>`:''}
+      ${c.nota?`<div style="font-size:12px;color:var(--text3);margin-top:8px;border-top:1px solid var(--border);padding-top:8px">${highlight(c.nota,fLaudo)}</div>`:''}
+      ${laudoMatch&&(preHL||revHL)?`<div style="margin-top:8px;border-top:1px solid var(--border);padding-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        ${preHL?`<div><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#633806;margin-bottom:4px">Pré-laudo</div><div style="font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-wrap;max-height:80px;overflow:hidden">${preHL}</div></div>`:''}
+        ${revHL?`<div><div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#085041;margin-bottom:4px">Laudo revisado</div><div style="font-size:12px;color:var(--text2);line-height:1.7;white-space:pre-wrap;max-height:80px;overflow:hidden">${revHL}</div></div>`:''}
       </div>`:''}
       <div class="diff-panel" id="diff-${c.id}"></div>
       <div class="edit-form" id="edit-${c.id}">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px;margin-bottom:10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-bottom:10px">
           <div class="field"><label>Data exame</label><input type="date" id="${p}dataExame" onchange="calcIdadeEdit('${p}')"></div>
           <div class="field"><label>Data laudo</label><input type="date" id="${p}dataLaudo"></div>
-          <div class="field"><label>Hospital</label><input id="${p}local" placeholder="Hospital"></div>
           <div class="field"><label>Paciente</label><input id="${p}paciente" placeholder="Nome"></div>
           <div class="field"><label>Registro</label><input id="${p}regpaciente" placeholder="Nº prontuário"></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
           <div class="field"><label>Data de nascimento</label><input type="date" id="${p}dtnasc" onchange="calcIdadeEdit('${p}')"></div>
-          <div class="field"><label>Idade no exame</label><input id="${p}idade" readonly style="background:#f5f5f3;color:#555;cursor:default" placeholder="Calculada automaticamente"></div>
+          <div class="field"><label>Idade no exame</label><input id="${p}idade" readonly style="background:var(--bg3);color:var(--text2);cursor:default" placeholder="Calculada automaticamente"></div>
         </div>
         <div class="grid2" style="margin-bottom:10px">
           <div class="field"><label>Modalidade</label>
@@ -855,10 +957,7 @@ function renderCases(){
           </div>
         </div>
         ${c.modal==='Ultrassonografia (US)'?`<div style="margin-bottom:10px"><div class="field"><label>Doppler</label><select id="${p}doppler"><option value="">Sem Doppler</option><option>Doppler venoso</option><option>Doppler arterial</option><option>Doppler obstétrico</option><option>Doppler de órgãos</option><option>Outro Doppler</option></select></div></div>`:'<input type="hidden" id="${p}doppler" value="">'}
-        <div class="grid3" style="margin-bottom:10px">
-          <div class="field"><label>Nível</label>
-            <select id="${p}nivel"><option value="">—</option>${selOpts(c.nivel,['Observador','Executante (supervisionado)','Executante (independente)','Supervisor / ensino'])}</select>
-          </div>
+        <div class="grid2" style="margin-bottom:10px">
           <div class="field"><label>Tipo</label>
             <select id="${p}tipo"><option value="">—</option>${selOpts(c.tipo,['Eletivo / ambulatorial','Urgência / emergência','UTI / internação','Centro cirúrgico','Telelaudo remoto'])}</select>
           </div>
@@ -889,7 +988,11 @@ function renderCases(){
       </div>
     </div>`;
   }).join('');
-  filtered.forEach(c=>populateEditForm(c.id));
+  
+  html += getPaginationHTML(currentPage, totalPages);
+  
+  el.innerHTML = html;
+  paginated.forEach(c=>populateEditForm(c.id));
 }
 
 function renderPanel(){
@@ -918,19 +1021,20 @@ function renderPanel(){
   const pc={};cases.filter(c=>c.preceptor).forEach(c=>{pc[c.preceptor]=(pc[c.preceptor]||0)+1;});bars(pc,'bar-preceptor');
 }
 
-const HEADERS=["ID","Nome","Ano","Data Exame","Data Laudo","Hospital","Paciente","Registro Paciente",
-  "Data Nascimento","Idade no Exame","Modalidade","Doppler","Área","Nível","Tipo","Dificuldade","Status Laudo",
+const HEADERS=["ID","Data Exame","Data Laudo","Paciente","Registro Paciente",
+  "Data Nascimento","Idade no Exame","Modalidade","Doppler","Área","Tipo","Dificuldade","Status Laudo",
   "Preceptor","Diagnóstico","Notas","Pré-laudo texto","Laudo revisado texto"];
+
 function caseToRow(c){
   const sl=c.statusLaudo==='pre-laudo'?'Pré-laudo liberado':c.statusLaudo==='revisado'?'Revisado pelo preceptor':'';
-  return[c.id,c.nome||'',c.anoRes||'',c.dataExame||'',c.dataLaudo||'',c.local||'',c.paciente||'',c.regpaciente||'',
-    c.dtnasc||'',c.idade||'',c.modal||'',c.doppler||'',c.area||'',c.nivel||'',c.tipo||'',c.dif||'',sl,
+  return[c.id,c.dataExame||'',c.dataLaudo||'',c.paciente||'',c.regpaciente||'',
+    c.dtnasc||'',c.idade||'',c.modal||'',c.doppler||'',c.area||'',c.tipo||'',c.dif||'',sl,
     c.preceptor||'',c.diag||'',c.nota||'',c.prelaudoTxt||'',c.laudoRevTxt||''];
 }
 function exportExcel(){
   if(!cases.length){alert('Nenhum caso para exportar.');return;}
   const ws=XLSX.utils.aoa_to_sheet([HEADERS,...cases.map(caseToRow)]);
-  ws['!cols']=[8,20,5,12,12,16,18,22,22,20,16,14,20,20,40,40,60,60].map(w=>({wch:w}));
+  ws['!cols']=[8,12,12,18,18,12,14,20,16,22,20,20,20,20,40,40,60,60].map(w=>({wch:w}));
   const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Case Log');
   XLSX.writeFile(wb,`case_log_radiologia_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
@@ -955,9 +1059,9 @@ function importFile(input){
       rows.slice(1).forEach(r=>{
         if(!r[ix('diagnós')])return;
         const sl=String(r[ix('status')]||'');
-        cases.push({id:Date.now()+Math.random(),nome:r[ix('nome')]||'',anoRes:r[ix('ano')]||'',
-          dataExame:r[ix('exame')]||'',dataLaudo:r[ix('laudo')]||'',local:r[ix('hosp')]||'',paciente:r[ix('paciente')]||'',regpaciente:r[ix('registro')]||'',
-          modal:r[ix('modal')]||'',area:r[ix('área')]||r[ix('area')]||'',nivel:r[ix('nível')]||r[ix('nivel')]||'',
+        cases.push({id:Date.now()+Math.random(),
+          dataExame:r[ix('exame')]||'',dataLaudo:r[ix('laudo')]||'',paciente:r[ix('paciente')]||'',regpaciente:r[ix('registro')]||'',
+          modal:r[ix('modal')]||'',area:r[ix('área')]||r[ix('area')]||'',doppler:r[ix('doppler')]||'',dtnasc:r[ix('nascimento')]||'',idade:r[ix('idade')]||'',
           tipo:r[ix('tipo')]||'',dif:r[ix('dific')]||'',
           statusLaudo:sl.includes('revisado')?'revisado':sl.includes('pré')||sl.includes('pre')?'pre-laudo':'',
           preceptor:r[ix('preceptor')]||'',diag:r[ix('diagnós')]||'',nota:r[ix('nota')]||'',
@@ -973,6 +1077,7 @@ function importFile(input){
 }
 
 function syncSend() {
+  const url = URL_FIXA_DO_GOOGLE;
   const st = document.getElementById('sync-status');
   const btn = document.getElementById('btn-sync-send');
   
@@ -989,12 +1094,10 @@ function syncSend() {
   st.className = 'gs-status gs-info';
   st.style.display = 'block';
 
-  fetch(URL_FIXA_DO_GOOGLE, {
+  fetch(url, {
     method: "POST",
     mode: "no-cors",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(cases) 
   })
   .then(() => {
@@ -1005,7 +1108,7 @@ function syncSend() {
   })
   .catch(err => {
     console.error("Erro ao sincronizar:", err);
-    st.textContent = 'Erro ao enviar. Verifique sua conexão internet.';
+    st.textContent = 'Erro ao enviar. Verifique a sua conexão com a internet.';
     st.className = 'gs-status gs-err';
     btn.textContent = 'Enviar para Sheets';
     btn.disabled = false;
@@ -1013,11 +1116,12 @@ function syncSend() {
 }
 
 function syncReceive(){
+  if(cases.length>0&&!confirm('Isso vai substituir os seus '+cases.length+' caso(s) locais com os dados do Google Sheets. Continuar?'))return;
   const url=URL_FIXA_DO_GOOGLE;
   const st=document.getElementById('sync-status');
   const btn=document.getElementById('btn-sync-receive');
   btn.textContent='Recebendo...';btn.disabled=true;
-  st.textContent='Buscando casos do Google Sheets...';st.className='gs-status gs-info';st.style.display='block';
+  st.textContent='Buscando casos no Google Sheets...';st.className='gs-status gs-info';st.style.display='block';
   const cbName='gsCallback_'+Date.now();
   const scriptUrl=url+(url.includes('?')?'&':'?')+'callback='+cbName+'&action=read';
   const timeout=setTimeout(()=>{
@@ -1060,8 +1164,27 @@ function clearAll(){cases=[];persist();renderCases();renderPanel();}
 function initApp(){
   document.getElementById('f-data-exame').value=new Date().toISOString().split('T')[0];
   document.getElementById('f-data-laudo').value=new Date().toISOString().split('T')[0];
-  loadProfile();
 }
+
+function toggleDark(){
+  document.body.classList.toggle('dark');
+  const btn=document.getElementById('dark-toggle');
+  const isDark=document.body.classList.contains('dark');
+  btn.textContent=isDark?'☀️':'🌙';
+  localStorage.setItem('dark_mode',isDark?'1':'0');
+}
+function initDark(){
+  if(localStorage.getItem('dark_mode')==='1'){
+    document.body.classList.add('dark');
+    const btn=document.getElementById('dark-toggle');
+    if(btn)btn.textContent='☀️';
+  }
+}
+function copyScript(){
+  navigator.clipboard.writeText(document.getElementById('script-box').textContent)
+    .then(()=>{const m=document.getElementById('copy-msg');m.style.display='inline';setTimeout(()=>m.style.display='none',2000);});
+}
+initDark();
 
 checkAuth();
 </script>
